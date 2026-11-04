@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Same policy as the API's Content-Security-Policy header, so the static (GitHub Pages)
+       build, which cannot set headers, is covered too. A meta policy cannot carry
+       frame-ancestors; the API header keeps it. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Battery SOH: state of health from a partial cycle</title>
+  <meta name="description" content="Estimate lithium-ion cell state of health from a partial charge or discharge window, with battery-level conformal intervals. No full capacity test, no target leakage.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="assets/config.js"></script>
+  <script src="assets/js/theme-boot.js"></script>
+  <script src="assets/vendor/chart.umd.min.js" defer></script>
+  <script type="module" src="assets/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect x="3" y="8" width="23" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <rect x="26.5" y="13" width="3" height="6" rx="1.2" fill="currentColor"/>
+          <rect x="6.5" y="11.5" width="11" height="9" rx="1.6" fill="currentColor"/>
+        </svg>
+        <div class="brand-text">
+          <h1 class="brand-title">Battery SOH</h1>
+          <p class="tagline">State of health from a partial charge or discharge. No full capacity test, no target leakage.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p id="service-status" class="status-pill" data-state="pending">
+          <span class="status-dot" aria-hidden="true"></span><span class="status-text">Connecting&hellip;</span>
+        </p>
+        <button type="button" id="theme-toggle" class="icon-btn" aria-pressed="false" aria-label="Dark theme">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="static-banner" class="static-banner" hidden>
+    <div class="wrap">
+      <p><strong>Static demo.</strong> Running without a server: data is precomputed and estimates are computed in your browser from the published model bundle. Uploading a raw cycle needs the API.</p>
+    </div>
+  </div>
+
+  <main id="main" class="wrap" tabindex="-1">
+    <section class="pipeline" aria-labelledby="pipeline-title">
+      <h2 id="pipeline-title" class="eyebrow">How it works</h2>
+      <ol class="pipeline-steps">
+        <li class="step">
+          <span class="step-num" aria-hidden="true">1</span>
+          <div><p class="step-title">Raw cycle</p><p class="step-body">Voltage, current and temperature from one charge or discharge</p></div>
+        </li>
+        <li class="step">
+          <span class="step-num" aria-hidden="true">2</span>
+          <div><p class="step-title">Partial-window health indicators</p><p class="step-body">3.90&ndash;4.19&nbsp;V on CC charge, 3.80&ndash;3.50&nbsp;V on discharge</p></div>
+        </li>
+        <li class="step">
+          <span class="step-num" aria-hidden="true">3</span>
+          <div><p class="step-title">Ridge regression</p><p class="step-body">Standardised linear model with exact per-indicator attribution</p></div>
+        </li>
+        <li class="step">
+          <span class="step-num" aria-hidden="true">4</span>
+          <div><p class="step-title">Battery-level conformal interval</p><p class="step-body">Calibrated on held-out batteries (leave-one-battery-out)</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <div class="tabs-bar">
+      <div role="tablist" aria-label="Sections" class="tablist" id="tablist">
+        <button type="button" role="tab" id="tab-estimate" data-tab="estimate" aria-controls="panel-estimate" aria-selected="true">Estimate</button>
+        <button type="button" role="tab" id="tab-benchmark" data-tab="benchmark" aria-controls="panel-benchmark" aria-selected="false" tabindex="-1">Benchmark</button>
+        <button type="button" role="tab" id="tab-audit" data-tab="audit" aria-controls="panel-audit" aria-selected="false" tabindex="-1">Leakage audit</button>
+        <button type="button" role="tab" id="tab-model" data-tab="model" aria-controls="panel-model" aria-selected="false" tabindex="-1">Model card</button>
+      </div>
+    </div>
+
+    <!-- ============================================================ Estimate -->
+    <section role="tabpanel" id="panel-estimate" class="panel" aria-labelledby="tab-estimate" tabindex="0">
+      <h2 class="visually-hidden">Estimate</h2>
+      <div class="card toolbar" role="group" aria-label="Demo cell and model">
+        <div class="field">
+          <label for="battery-select">Demo cell</label>
+          <select id="battery-select" disabled><option>Loading&hellip;</option></select>
+        </div>
+        <div class="field field--slider">
+          <div class="field-row">
+            <label for="cycle-slider">Cycle</label>
+            <output id="cycle-output" for="cycle-slider" class="tnum">&mdash;</output>
+          </div>
+          <input type="range" id="cycle-slider" min="0" max="0" value="0" step="1" disabled aria-describedby="cycle-help">
+          <p id="cycle-help" class="hint">First five valid cycles (commissioning reference), then about every eighth.</p>
+        </div>
+        <div class="field">
+          <label for="model-select">Model</label>
+          <select id="model-select" disabled><option value="">Auto (best for the available indicators)</option></select>
+        </div>
+        <div class="field field--narrow">
+          <label for="confidence-select">Interval</label>
+          <select id="confidence-select">
+            <option value="0.8">80%</option>
+            <option value="0.9" selected>90%</option>
+            <option value="0.95">95%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid--estimate">
+        <div class="stack">
+          <article class="card" aria-labelledby="curves-title">
+            <header class="card-head">
+              <h3 id="curves-title" class="card-title">Measured cycle</h3>
+              <p class="card-sub">Raw voltage and current. Shaded bands mark the windows the health indicators are measured in.</p>
+            </header>
+            <div class="chart-pair">
+              <figure class="chart-figure">
+                <figcaption class="chart-caption">Charge (1.5&nbsp;A CC, then 4.2&nbsp;V CV)</figcaption>
+                <div class="chart-box" id="charge-box"><canvas id="chart-charge" role="img" aria-label="Charge voltage and current over time"></canvas></div>
+                <p class="chart-note" id="charge-note"></p>
+              </figure>
+              <figure class="chart-figure">
+                <figcaption class="chart-caption">Discharge (2&nbsp;A CC to the cell&rsquo;s cut-off, 2.2&ndash;2.7&nbsp;V)</figcaption>
+                <div class="chart-box" id="discharge-box"><canvas id="chart-discharge" role="img" aria-label="Discharge voltage and current over time"></canvas></div>
+                <p class="chart-note" id="discharge-note"></p>
+              </figure>
+            </div>
+          </article>
+        </div>
+        <div class="stack">
+          <article class="card result-card" aria-labelledby="result-title">
+            <header class="card-head">
+              <h3 id="result-title" class="card-title">Estimated state of health</h3>
+            </header>
+            <div id="demo-result" aria-busy="true"></div>
+          </article>
+          <article class="card" aria-labelledby="contrib-title">
+            <header class="card-head">
+              <h3 id="contrib-title" class="card-title">Why this estimate</h3>
+              <p class="card-sub">Exact contribution of each indicator in SOH points, relative to the average training cycle (base value).</p>
+            </header>
+            <div class="chart-box chart-box--contrib" id="contrib-box"><canvas id="chart-contrib" role="img" aria-label="Contributions of each indicator"></canvas></div>
+            <p class="chart-note" id="contrib-note"></p>
+          </article>
+        </div>
+      </div>
+
+      <article class="card card--spaced" aria-labelledby="hi-title">
+        <header class="card-head">
+          <h3 id="hi-title" class="card-title">Extracted health indicators</h3>
+          <p class="card-sub">Computed from the measurement windows of this cycle; never from capacity or a full discharge. Ticks mark the inputs of the model that produced the estimate.</p>
+        </header>
+        <div id="hi-table"></div>
+      </article>
+
+      <h3 class="section-title">Try your own data</h3>
+      <div class="grid grid--two">
+        <article class="card" aria-labelledby="manual-title">
+          <header class="card-head">
+            <h4 id="manual-title" class="card-title">Manual indicators</h4>
+            <p class="card-sub" id="manual-sub">Enter indicators measured on your cell. Blank fields are imputed with the training median (and reported).</p>
+          </header>
+          <form id="manual-form" class="form" novalidate>
+            <div id="manual-fields" class="form-grid"></div>
+            <p id="manual-form-error" class="form-error" role="alert" hidden></p>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Estimate SOH</button>
+              <button type="button" id="manual-prefill" class="btn">Fill from demo cycle</button>
+              <button type="reset" class="btn btn-ghost">Clear</button>
+            </div>
+          </form>
+          <div id="manual-result" class="inline-result"></div>
+        </article>
+        <article class="card" aria-labelledby="csv-title">
+          <header class="card-head">
+            <h4 id="csv-title" class="card-title">Upload a partial cycle</h4>
+            <p class="card-sub">CSV with a header row <code>time_s,voltage_v,current_a,temperature_c</code>. NASA sign convention: discharge current is negative.</p>
+          </header>
+          <form id="csv-form" class="form" novalidate>
+            <div class="form-grid form-grid--csv">
+              <div class="field">
+                <label for="csv-segment">Segment type</label>
+                <select id="csv-segment">
+                  <option value="discharge">Discharge</option>
+                  <option value="charge">Charge (CC-CV)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="csv-file">CSV file</label>
+                <input type="file" id="csv-file" accept=".csv,text/csv" aria-describedby="csv-help csv-summary">
+              </div>
+            </div>
+            <p id="csv-help" class="hint">Up to 20,000 samples. The segment must cross its window: 3.90&ndash;4.19&nbsp;V on charge or 3.80&ndash;3.50&nbsp;V on discharge.</p>
+            <p id="csv-summary" class="hint tnum"></p>
+            <p id="csv-note" class="note" hidden></p>
+            <p id="csv-form-error" class="form-error" role="alert" hidden></p>
+            <div class="form-actions">
+              <button type="submit" id="csv-submit" class="btn btn-primary">Extract and estimate</button>
+              <button type="button" id="csv-sample" class="btn">Download sample CSV</button>
+            </div>
+          </form>
+          <div id="csv-result" class="inline-result"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================================================ Benchmark -->
+    <section role="tabpanel" id="panel-benchmark" class="panel" aria-labelledby="tab-benchmark" tabindex="0" hidden>
+      <h2 class="visually-hidden">Benchmark</h2>
+      <div id="bench-root" aria-busy="true"></div>
+    </section>
+
+    <!-- ============================================================ Leakage audit -->
+    <section role="tabpanel" id="panel-audit" class="panel" aria-labelledby="tab-audit" tabindex="0" hidden>
+      <h2 class="visually-hidden">Leakage audit</h2>
+      <div class="grid grid--audit">
+        <article class="card" aria-labelledby="audit-chart-title">
+          <header class="card-head">
+            <h3 id="audit-chart-title" class="card-title">v1 as reported vs honest evaluation</h3>
+            <p class="card-sub">Mean absolute error in SOH points. The v1 number looked excellent because the answer was an input and the test rows had been seen in training.</p>
+          </header>
+          <div id="audit-root" aria-busy="true"></div>
+        </article>
+        <article class="card prose" aria-labelledby="audit-explain-title">
+          <header class="card-head">
+            <h3 id="audit-explain-title" class="card-title">What went wrong in v1</h3>
+          </header>
+          <ol class="explain-list">
+            <li><strong>The answer was an input.</strong> SOH is defined as 100&nbsp;&times;&nbsp;capacity&nbsp;&divide;&nbsp;C<sub>0</sub>, and capacity was fed to the model. Within one battery the &ldquo;prediction&rdquo; was a fixed rescaling of an input.</li>
+            <li><strong>The test set overlapped training.</strong> Most of the reported test rows were cycles the model had already been trained on, so the score measured memory, not generalisation to a new cell.</li>
+            <li><strong>Proxies rebuilt the label.</strong> Whole-record statistics such as record length and mean current reconstruct capacity almost exactly, so dropping the capacity column alone does not remove the leak.</li>
+          </ol>
+          <h4 class="prose-title">What v2 does instead</h4>
+          <ul class="explain-list explain-list--bullets">
+            <li>Inputs are health indicators measured inside a partial window of a charge or discharge. Capacity and full-discharge statistics are refused by the feature registry.</li>
+            <li>Every metric is leave-one-battery-out: the evaluated cell is never seen in training or calibration.</li>
+            <li>Intervals are calibrated on held-out batteries, and their empirical coverage is reported next to the error.</li>
+          </ul>
+        </article>
+      </div>
+      <div id="audit-facts"></div>
+      <article id="audit-table-card" class="card card--spaced" aria-labelledby="audit-table-title" hidden>
+        <header class="card-head">
+          <h3 id="audit-table-title" class="card-title">All audit evaluations</h3>
+          <p class="card-sub">&ldquo;Leaky input&rdquo; marks evaluations that feed the model capacity or full-discharge statistics. R&sup2; is pooled over the evaluated cycles.</p>
+        </header>
+        <div id="audit-table"></div>
+      </article>
+    </section>
+
+    <!-- ============================================================ Model card -->
+    <section role="tabpanel" id="panel-model" class="panel" aria-labelledby="tab-model" tabindex="0" hidden>
+      <h2 class="visually-hidden">Model card</h2>
+      <div class="card toolbar toolbar--compact">
+        <div class="field">
+          <label for="card-model-select">Model</label>
+          <select id="card-model-select" disabled><option>Loading&hellip;</option></select>
+        </div>
+        <p class="hint toolbar-hint">Every number below is read from the published model bundle, not typed into this page.</p>
+      </div>
+      <div id="card-root" aria-busy="true"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>Data: NASA Ames Prognostics Center of Excellence, Battery Data Set (cells B0005, B0006, B0007, B0018). All metrics are leave-one-battery-out.</p>
+      <p class="footer-links" id="footer-links"><a href="docs">API docs</a><span aria-hidden="true"> &middot; </span><a href="openapi.json">OpenAPI schema</a></p>
+    </div>
+  </footer>
+
+  <div id="announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+  <noscript><p class="noscript">This dashboard needs JavaScript. The API itself is documented at <a href="docs">/docs</a>.</p></noscript>
+</body>
+</html>

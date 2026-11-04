@@ -1,0 +1,68 @@
+# ---------------------------------------------------------------- private
+# Local-only material that must never be published (drafts, archives, secrets).
+_private/
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------- python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ---------------------------------------------------------------- notebooks
+.ipynb_checkpoints/
+.jupyter_runtime/
+
+# ---------------------------------------------------------------- data
+# Raw datasets are downloaded with `soh data download`, never committed.
+data/raw/*
+!data/raw/README.md
+data/interim/
+
+# ---------------------------------------------------------------- binaries / outputs
+# Models ship as auditable JSON bundles under artifacts/; no pickles in git.
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.ckpt
+*.joblib
+*.tar
+*.tar.gz
+*.zip
+*.log
+logs/
+mlruns/
+
+# ---------------------------------------------------------------- os / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# Static GitHub Pages build output (soh export-static)
+site/
+
+# Test reports written by CI
+junit.xml
+
+# CI smoke-run output of `soh benchmark --quick`
+reports/benchmark/quick/

@@ -1,0 +1,151 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "battery-soh"
+version = "2.0.0"
+description = "Leakage-free Li-ion battery state-of-health estimation from partial charge/discharge windows, with battery-level conformal uncertainty and a production-style FastAPI service."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Preran Sai Yarramasu" }]
+keywords = [
+  "battery",
+  "state-of-health",
+  "lithium-ion",
+  "machine-learning",
+  "conformal-prediction",
+  "data-leakage",
+  "fastapi",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scipy>=1.11",
+  "scikit-learn>=1.4",
+  "pyyaml>=6.0",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+api = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "prometheus-client>=0.20",
+]
+report = ["matplotlib>=3.8"]
+notebook = ["battery-soh[report]", "jupyterlab>=4.0", "ipykernel>=6.0", "nbconvert>=7.0"]
+dev = [
+  "battery-soh[api,report]",
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "hypothesis>=6.100",
+  "httpx>=0.27",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "types-PyYAML",
+  "pre-commit>=3.7",
+]
+
+[project.scripts]
+soh = "battery_soh.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/battery_soh"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/battery_soh", "tests", "configs", "README.md", "LICENSE", "pyproject.toml"]
+
+# ------------------------------------------------------------------ ruff
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# "./data" is the top-level data folder only; a bare "data" would also skip src/battery_soh/data.
+extend-exclude = ["legacy", "_private", "./data", ".venv"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "I",        # isort
+  "B",        # bugbear
+  "UP",       # pyupgrade
+  "SIM",      # simplify
+  "C4",       # comprehensions
+  "PT",       # pytest style
+  "N",        # naming
+  "NPY",      # numpy-specific
+  "RUF",      # ruff-specific
+  "S",        # bandit (security)
+  "ARG",      # unused arguments
+  "PTH",      # prefer pathlib
+  "RET",      # return hygiene
+]
+ignore = [
+  "S101",     # assert is fine in tests and for internal invariants
+  "N803",     # argument names like X / V mirror scientific notation
+  "N806",     # variable names like X_train, V, I, Q mirror scientific notation
+  "RUF001",   # allow unicode (e.g. Ω, °) in strings
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "ARG", "PLR2004"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["battery_soh"]
+
+# ------------------------------------------------------------------ mypy
+[tool.mypy]
+python_version = "3.11"
+files = ["src/battery_soh"]
+strict = true
+warn_return_any = false
+warn_unreachable = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "scipy.*", "pandas.*", "matplotlib.*", "prometheus_client.*", "uvicorn.*"]
+ignore_missing_imports = true
+
+# ------------------------------------------------------------------ pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "slow: long-running test (excluded from the fast suite with -m 'not slow')",
+  "raw_data: needs the raw NASA .mat files under data/raw/nasa (skipped when absent)",
+]
+filterwarnings = [
+  "error::FutureWarning:battery_soh.*",
+]
+
+# ------------------------------------------------------------------ coverage
+[tool.coverage.run]
+source = ["battery_soh"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+]

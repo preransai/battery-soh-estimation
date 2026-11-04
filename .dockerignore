@@ -1,0 +1,31 @@
+# Allowlist: the build context contains ONLY what the Dockerfile copies.
+# Everything else (raw data, .env, _private/, legacy/, .git, notebooks, tests, docs)
+# never reaches the Docker daemon, which keeps builds fast and secrets out of images.
+# When the Dockerfile starts copying a new path, re-include it here.
+*
+
+# deps stage: the hashed runtime lock
+!requirements/runtime.lock
+
+# builder stage: wheel sources and metadata
+!pyproject.toml
+!README.md
+!LICENSE
+!src/
+
+# runtime stage: application data under /app
+!configs/
+!frontend/
+!artifacts/
+!reports/benchmark/
+!reports/audit/
+
+# Never ship these, even from inside the allowed directories.
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+**/.DS_Store
+**/Thumbs.db
+**/.gitkeep
+**/node_modules
+frontend/tests/

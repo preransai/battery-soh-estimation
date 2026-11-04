@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below, and cite the NASA battery dataset it is built on."
+type: software
+title: "battery-soh: leakage-free Li-ion state-of-health estimation"
+abstract: >-
+  Estimates the state of health (SOH) of lithium-ion cells from partial-window health
+  indicators (a partial constant-current charge, a partial discharge window or EIS),
+  never from capacity or any full-discharge statistic. Models are evaluated with
+  leave-one-battery-out cross-validation on the NASA PCoE battery dataset, report
+  battery-level conformal prediction intervals, and are served by a FastAPI service
+  with a static web UI. The project also reproduces and documents the target leakage
+  of an earlier version that used capacity as a model input.
+authors:
+  - given-names: Preran Sai
+    family-names: Yarramasu
+version: 2.0.0
+date-released: "2026-10-12"
+license: MIT
+keywords:
+  - lithium-ion battery
+  - state of health
+  - prognostics and health management
+  - machine learning
+  - data leakage
+  - conformal prediction
+  - leave-one-battery-out
+references:
+  - type: dataset
+    title: "Battery Data Set"
+    authors:
+      - given-names: Bhaskar
+        family-names: Saha
+      - given-names: Kai
+        family-names: Goebel
+    year: 2007
+    publisher:
+      name: "NASA Ames Research Center"
+    location:
+      name: "Moffett Field, CA"
+    url: "https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/"
+    notes: "NASA Ames Prognostics Data Repository (PCoE), dataset 5: Battery Data Set."

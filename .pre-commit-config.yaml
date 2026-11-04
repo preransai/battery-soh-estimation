@@ -1,0 +1,71 @@
+# Git hooks: `pre-commit install` once (done by `make install`), then they run on every
+# commit. Run everything by hand with `pre-commit run --all-files`; refresh the pinned
+# revisions with `pre-commit autoupdate`.
+#
+# Generated and frozen files are excluded from the whitespace fixers: model bundles,
+# reports and the feature table are verified by SHA-256 (rewriting a single byte would
+# break MANIFEST.json and the .meta.json sidecars), legacy/ is a frozen snapshot of v1,
+# and vendored assets are kept byte-identical to upstream.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: &generated ^(artifacts|reports|data|legacy|frontend/assets/vendor)/
+      - id: end-of-file-fixer
+        exclude: *generated
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=3000]
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.0
+    # Same version as requirements/constraints.txt (CI and the dev environment); bump both
+    # together. legacy/ is the frozen v1 snapshot; it is also excluded in [tool.ruff] of
+    # pyproject.toml.
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        exclude: ^legacy/
+      - id: ruff-format
+        exclude: ^legacy/
+
+  # Secret scanning of the staged changes (redacted output). Runs the pinned gitleaks
+  # release; pre-commit builds it with Go, which it bootstraps if Go is not installed.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Notebooks are committed without outputs, execution counts or widget state (outputs
+  # embed absolute paths and data; they belong in reports/). Cell ids are kept so that
+  # stripping never rewrites cell identity. The one exception is the curated walkthrough,
+  # whose rendered outputs are the point of the file: it is regenerated with
+  # `jupyter nbconvert --execute --inplace`. CI re-executes it so that a cell that raises
+  # (an API or artifact change the notebook was not updated for) fails the build; CI does
+  # not compare the re-executed outputs with the committed ones.
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
+        args: [--keep-id]
+        exclude: ^notebooks/01_walkthrough\.ipynb$
+
+  # mypy needs the project's dependencies for precise types, so it runs from the active
+  # virtualenv (`pip install -e ".[dev]"`) instead of an isolated hook environment.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy --strict (src/battery_soh)
+        entry: mypy
+        args: [src/battery_soh]
+        language: system
+        types: [python]
+        files: ^src/
+        pass_filenames: false
+        require_serial: true

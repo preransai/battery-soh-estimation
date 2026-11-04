@@ -1,0 +1,69 @@
+# battery-soh: API + web UI in one hardened container.
+#
+#   docker compose up --build -d     # build and start in the background
+#   docker compose ps                # STATUS shows (healthy) once the models are loaded
+#   docker compose logs -f api       # follow the structured logs
+#   docker compose down              # stop and remove
+#
+# Then open http://127.0.0.1:8000 (OpenAPI docs at /docs).
+#
+# No .env file is required. Every setting below has a default; to change one, export it
+# in your shell or put it in a local .env (see .env.example). Compose only uses .env for
+# ${VAR} interpolation here, so unrelated variables in a .env never reach the container.
+
+name: battery-soh
+
+services:
+  api:
+    build:
+      context: .
+    image: battery-soh:local
+    # Bound to loopback: the API has no authentication by design (see SECURITY.md).
+    # Put a reverse proxy in front before exposing it beyond this machine.
+    ports:
+      - "127.0.0.1:${PORT:-8000}:8000"
+    environment:
+      WEB_CONCURRENCY: "${WEB_CONCURRENCY:-1}"
+      SOH_LOG_JSON: "${SOH_LOG_JSON:-true}"
+      # Passed through only when set in your shell or .env; otherwise the app defaults
+      # apply (INFO, no cross-origin access, 1 MB request bodies, 100 items per batch).
+      SOH_LOG_LEVEL:
+      SOH_CORS_ORIGINS:
+      SOH_MAX_BODY_BYTES:
+      SOH_MAX_BATCH_ITEMS:
+    # Hardening: immutable root filesystem, no Linux capabilities, no privilege
+    # escalation; process count and resources are bounded under deploy.resources.
+    # The image already runs as uid 10001.
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request as r; r.urlopen('http://127.0.0.1:8000/readyz', timeout=4)"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          pids: 128
+          # Each worker loads its own numpy/scipy/pandas/scikit-learn stack and models; raise
+          # this together with WEB_CONCURRENCY.
+          memory: 512M
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

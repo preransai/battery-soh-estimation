@@ -1,0 +1,129 @@
+# Benchmark configuration, read by battery_soh.evaluation.benchmark.run_benchmark (`soh benchmark`).
+#
+# Every key is validated (unknown keys are errors). Results are deterministic for a fixed config and
+# feature table: summary.json records a sha256 of the benchmark sections of this file (not the
+# `production` section, which has its own hash in each bundle) and the feature CSV's sha256.
+schema_version: "1.0"
+description: >-
+  Leakage-free SOH estimation from partial-window health indicators. Whole batteries (or whole
+  operating conditions) are held out; feature selection, penalty tuning and conformal calibration
+  happen inside each outer training fold.
+
+seed: 42
+label: soh_pct              # 100 * capacity / C0, C0 = median of the cell's first 5 QC-valid capacities
+n_reference_cycles: 5       # relative mode: each HI / mean of the cell's first 5 QC-valid values
+confidence_levels: [0.8, 0.9, 0.95]
+n_jobs: -1                  # worker processes for the full run; results do not depend on it
+features_csv: null          # null = data/processed/nasa_features.csv
+raw_dir: null               # null = data/raw/nasa (window sweep only)
+
+conformal:
+  # GroupConformalRegressor, calibrated by leave-one-group-out residuals of the TRAINING groups.
+  # "cv" = full-model prediction +/- conformal quantile of the pooled residuals: the fixed half-width
+  # the production bundle ships. "cv_plus" = group CV+ (Barber et al. 2021).
+  methods: [cv, cv_plus]
+  primary: cv
+
+nested_selection:           # model "ridge_nfs"
+  scoring: inner_lobo_mae   # mean over inner leave-one-battery-out folds of the held-out cell's MAE
+  alphas: [0.1, 1.0, 10.0]
+  min_features: 1
+  tol: 1.0e-9               # a removal must lower the inner MAE by more than this
+
+# DECLARED HEADLINE (fixed 2026-10-12 before any ridge_nfs result; plain-ridge results for this set/mode were known)
+# Do not change it in response to results.
+headline:
+  experiment: core_lobo
+  feature_set: combined
+  mode: absolute
+  model: ridge_nfs
+
+# Reported next to the headline (summary.json "secondary").
+secondary:
+  - {feature_set: combined, mode: absolute, model: ridge, label: "Same set, plain ridge (no selection)"}
+  - {feature_set: combined, mode: relative, model: ridge_nfs, label: "Relative mode, nested selection"}
+  - {feature_set: combined, mode: relative, model: ridge, label: "Relative mode, plain ridge"}
+  - {feature_set: discharge, mode: absolute, model: ridge, label: "Discharge window only"}
+  - {feature_set: charge, mode: absolute, model: ridge, label: "Charge window only"}
+  - {feature_set: charge_no_cv, mode: absolute, model: ridge, label: "Post-hoc ablation: charge without CV time"}
+  - {feature_set: combined_no_cv, mode: absolute, model: ridge, label: "Post-hoc ablation: combined without CV time"}
+
+# Specs whose per-cycle out-of-fold predictions go to predictions.csv (the headline is always first).
+predictions:
+  - {experiment: core_lobo, feature_set: combined, mode: absolute, model: ridge_nfs}
+  - {experiment: core_lobo, feature_set: combined, mode: relative, model: ridge}
+
+experiments:
+  core_lobo:
+    description: Four 2 A / 24 degC reference cells, leave-one-battery-out.
+    batteries: CORE_BATTERIES
+    group_by: battery
+    feature_sets: [charge, discharge, combined, combined_eis, charge_no_cv, combined_no_cv]
+    # Defined after LOBO showed the CV-phase duration has a large cell-specific offset.
+    post_hoc_feature_sets: [charge_no_cv, combined_no_cv]
+    modes: [absolute, relative]
+    models: [ridge, ridge_nfs, pls, elasticnet, gpr, random_forest, hgb, mlp, knn]
+    baselines: [mean, cycle_only, capacity_oracle]   # capacity_oracle is LEAKY (labelled)
+    interval_models: all
+
+  extended_lobo:
+    description: Twelve usable cells in three operating conditions, leave-one-battery-out.
+    batteries: EXTENDED_BATTERIES
+    group_by: battery
+    feature_sets: [charge_ext, combined_ext]
+    modes: [relative, absolute]
+    models: [ridge, ridge_nfs, gpr, hgb]
+    baselines: [mean, cycle_only]
+    interval_models: [ridge, ridge_nfs]
+    # Temperature rises are interval-scale (degC differences); the cold (4 degC) and B0036 cells
+    # have reference rises between -1.5 and +0.02 degC, where a ratio is ill-conditioned. Decided
+    # from the reference values (features only) before any extended result was computed.
+    relative_keep_absolute: [chg_temp_rise_cc_c, dis_temp_rise_win_c]
+    bootstrap: {n_boot: 2000, confidence: 0.95}      # resampling unit: battery
+    wilcoxon: {reference: ridge, candidates: [gpr, hgb]}
+
+  leave_one_condition_out:
+    description: Extended cells, holding out one operating condition at a time.
+    batteries: EXTENDED_BATTERIES
+    group_by: condition
+    feature_sets: [charge_ext, combined_ext]
+    modes: [relative, absolute]
+    models: [ridge, ridge_nfs, gpr, hgb]
+    baselines: [mean]
+    interval_models: [ridge, ridge_nfs]
+    relative_keep_absolute: [chg_temp_rise_cc_c, dis_temp_rise_win_c]
+
+window_sweep:
+  description: >-
+    Exploratory sensitivity of single-window HIs to the voltage window (Ridge, LOBO, core cells).
+    Needs the raw .mat files; without them the committed reports/benchmark/window_sweep.json is
+    reused (CI never recomputes it).
+  requires_raw_data: true
+  batteries: CORE_BATTERIES
+  model: ridge
+  modes: [absolute, relative]
+  discharge: {v_high: [3.9, 3.8], v_low: [3.7, 3.6, 3.5, 3.4]}
+  charge: {v_start: [3.8, 3.9, 4.0], v_end: 4.19}
+
+quick:
+  description: CI smoke test (< 30 s, single process); written to <out_dir>/quick/.
+  output_subdir: quick
+  feature_sets: [combined]
+  modes: [absolute]
+  models: [ridge_nfs, ridge]
+  baselines: [mean, cycle_only, capacity_oracle]
+
+# Production bundles (consumed by battery_soh.training.train_bundles; metrics are copied from the
+# core_lobo rows of results.csv for the same feature set / mode / model).
+# model: ridge_nfs = the pre-specified headline procedure (nested backward selection + penalty by
+# inner leave-one-battery-out), re-run on all four core cells to fix each bundle's inputs and
+# penalty. One procedure for every bundle, so no bundle's model is chosen from held-out results.
+# The exported estimator is always a plain ridge on the selected inputs (ids end in "-ridge").
+production:
+  model: ridge_nfs
+  created_utc: features_meta   # bundle timestamp = feature-table build time -> byte-identical reruns
+  specs:
+    - {feature_set: charge, mode: absolute}
+    - {feature_set: discharge, mode: absolute}
+    - {feature_set: combined, mode: absolute}
+    - {feature_set: combined, mode: relative}
