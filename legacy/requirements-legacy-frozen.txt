@@ -84,11 +84,11 @@ networkx==3.6.1
 notebook==7.5.5
 notebook_shim==0.2.4
 numba==0.65.0
-numpy==2.4.4
+numpy==2.4.6
 openai==2.32.0
 overrides==7.7.0
 packaging==26.1
-pandas==3.0.2
+pandas==3.1.0
 pandocfilters==1.5.1
 parso==0.8.6
 pillow==12.2.0
@@ -118,7 +118,7 @@ rfc3987-syntax==1.1.0
 rich==15.0.0
 rpds-py==0.30.0
 safetensors==0.7.0
-scikit-learn==1.8.0
+scikit-learn==1.9.1
 scipy==1.17.1
 seaborn==0.13.2
 Send2Trash==2.1.0
