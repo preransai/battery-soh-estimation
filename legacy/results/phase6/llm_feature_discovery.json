@@ -1,0 +1,12 @@
+{
+  "baseline": {
+    "base_r2": 0.99972,
+    "base_mae": 0.1182,
+    "n_samples": 168,
+    "n_features_base": 19
+  },
+  "n_proposals": 0,
+  "n_evaluated": 0,
+  "raw_llm_response": "[\n  {\"name\": \"thermal_stress\", \"expr\": \"temp_delta * temp_max\", \"reason\": \"Higher temperature deltas at higher maximum temperatures increase thermal stress on the battery.\"},\n  {\"name\": \"internal_resistance_proxy\", \"expr\": \"dcir * voltage_range\", \"reason\": \"The product of DC internal resistance and voltage range can indicate the battery's internal resistance under varying operating conditions.\"},\n  {\"name\": \"voltage_stability\", \"expr\": \"voltage_std / voltage_mean\", \"reason\": \"A higher ratio of voltage standard deviation to mean voltage indicates poorer voltage stability.\"},\n  {\"name\": \"current_efficiency\", \"expr\": \"current_mean / discharge_time\", \"reason\": \"The ratio of mean current to discharge time reflects the efficiency of the current flow during discharge.\"},\n  {\"name\": \"temperature_i",
+  "results": []
+}

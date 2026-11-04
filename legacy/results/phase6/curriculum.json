@@ -1,0 +1,149 @@
+{
+  "setup": {
+    "n_train": 168,
+    "n_test": 336,
+    "n_features": 19,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "epochs": 30,
+    "wall_seconds": 20.16,
+    "tail_threshold_soh": 0.8
+  },
+  "aggregates": {
+    "random": {
+      "test_mae_mean": 0.09315,
+      "test_mae_std": 0.04336,
+      "tail_mae_mean": 0.09261,
+      "tail_mae_std": 0.05471,
+      "n_seeds": 5
+    },
+    "easy_first": {
+      "test_mae_mean": 0.09158,
+      "test_mae_std": 0.04136,
+      "tail_mae_mean": 0.08382,
+      "tail_mae_std": 0.04851,
+      "n_seeds": 5
+    },
+    "hard_first": {
+      "test_mae_mean": 0.092,
+      "test_mae_std": 0.04251,
+      "tail_mae_mean": 0.08909,
+      "tail_mae_std": 0.04822,
+      "n_seeds": 5
+    }
+  },
+  "verdict": "no_significant_gain",
+  "all_runs": [
+    {
+      "schedule": "random",
+      "seed": 0,
+      "test_mae": 0.05662,
+      "tail_mae": 0.05433,
+      "epochs": 30
+    },
+    {
+      "schedule": "random",
+      "seed": 1,
+      "test_mae": 0.15875,
+      "tail_mae": 0.18674,
+      "epochs": 30
+    },
+    {
+      "schedule": "random",
+      "seed": 2,
+      "test_mae": 0.04774,
+      "tail_mae": 0.04402,
+      "epochs": 30
+    },
+    {
+      "schedule": "random",
+      "seed": 3,
+      "test_mae": 0.12933,
+      "tail_mae": 0.12252,
+      "epochs": 30
+    },
+    {
+      "schedule": "random",
+      "seed": 4,
+      "test_mae": 0.07332,
+      "tail_mae": 0.05542,
+      "epochs": 30
+    },
+    {
+      "schedule": "easy_first",
+      "seed": 0,
+      "test_mae": 0.05463,
+      "tail_mae": 0.04846,
+      "epochs": 30
+    },
+    {
+      "schedule": "easy_first",
+      "seed": 1,
+      "test_mae": 0.1668,
+      "tail_mae": 0.17566,
+      "epochs": 30
+    },
+    {
+      "schedule": "easy_first",
+      "seed": 2,
+      "test_mae": 0.05246,
+      "tail_mae": 0.04217,
+      "epochs": 30
+    },
+    {
+      "schedule": "easy_first",
+      "seed": 3,
+      "test_mae": 0.09182,
+      "tail_mae": 0.08732,
+      "epochs": 30
+    },
+    {
+      "schedule": "easy_first",
+      "seed": 4,
+      "test_mae": 0.09221,
+      "tail_mae": 0.06551,
+      "epochs": 30
+    },
+    {
+      "schedule": "hard_first",
+      "seed": 0,
+      "test_mae": 0.04472,
+      "tail_mae": 0.05641,
+      "epochs": 30
+    },
+    {
+      "schedule": "hard_first",
+      "seed": 1,
+      "test_mae": 0.14222,
+      "tail_mae": 0.17105,
+      "epochs": 30
+    },
+    {
+      "schedule": "hard_first",
+      "seed": 2,
+      "test_mae": 0.04129,
+      "tail_mae": 0.03003,
+      "epochs": 30
+    },
+    {
+      "schedule": "hard_first",
+      "seed": 3,
+      "test_mae": 0.09905,
+      "tail_mae": 0.08165,
+      "epochs": 30
+    },
+    {
+      "schedule": "hard_first",
+      "seed": 4,
+      "test_mae": 0.13273,
+      "tail_mae": 0.10629,
+      "epochs": 30
+    }
+  ],
+  "note": "Curriculum learning applied to a 2-layer MLP. Difficulty = |SOH - 1.0| (knee cycles are 'hard'). If the mean tail-MAE gap between schedules is smaller than the random-baseline seed std, the experiment is inconclusive and we do not claim a curriculum benefit."
+}

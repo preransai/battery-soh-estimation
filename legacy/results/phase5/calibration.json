@@ -1,0 +1,59 @@
+{
+  "mode": "split_conformal_main_ridge",
+  "n_calibration": 168,
+  "n_final_test": 168,
+  "n_features": 19,
+  "missing_main_cols": [],
+  "calibration_seed": 42,
+  "ece": 0.0332,
+  "mce": 0.0607,
+  "sharpness": 3.7697,
+  "under_coverage": -0.004,
+  "over_coverage": 0.0607,
+  "picp_at_90": 0.9286,
+  "rmse": 1.1629,
+  "bins": [
+    {
+      "nominal": 0.5,
+      "empirical": 0.5417,
+      "mean_width": 1.5156,
+      "count": 168
+    },
+    {
+      "nominal": 0.6,
+      "empirical": 0.6607,
+      "mean_width": 1.8586,
+      "count": 168
+    },
+    {
+      "nominal": 0.7,
+      "empirical": 0.7262,
+      "mean_width": 2.2812,
+      "count": 168
+    },
+    {
+      "nominal": 0.8,
+      "empirical": 0.8452,
+      "mean_width": 2.9419,
+      "count": 168
+    },
+    {
+      "nominal": 0.9,
+      "empirical": 0.9286,
+      "mean_width": 4.0734,
+      "count": 168
+    },
+    {
+      "nominal": 0.95,
+      "empirical": 0.9762,
+      "mean_width": 5.6168,
+      "count": 168
+    },
+    {
+      "nominal": 0.99,
+      "empirical": 0.994,
+      "mean_width": 8.1002,
+      "count": 168
+    }
+  ]
+}

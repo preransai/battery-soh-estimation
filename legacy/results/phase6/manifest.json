@@ -1,0 +1,156 @@
+{
+  "started_at": "2026-04-24T17:53:17",
+  "modules": {
+    "rap_benchmark": {
+      "status": "ok",
+      "seconds": 52.52,
+      "head": {
+        "n_samples": 10,
+        "template_mae_via_top_hit": 11.24,
+        "llm_mae_via_top_hit": 11.24,
+        "llm_actually_used": 10,
+        "llm_fallback_rate": 0.0
+      }
+    },
+    "llm_feature_discovery": {
+      "status": "ok",
+      "seconds": 4.04,
+      "head": {
+        "baseline": {
+          "base_r2": 0.99972,
+          "base_mae": 0.1182,
+          "n_samples": 168,
+          "n_features_base": 19
+        },
+        "n_proposals": 0,
+        "n_evaluated": 0
+      }
+    },
+    "pinn_sweep": {
+      "status": "ok",
+      "seconds": 24.99,
+      "head": {
+        "n_configurations": 36,
+        "top1": {
+          "alpha_mono": 0.02,
+          "alpha_arr": 0.01,
+          "alpha_cap": 0.01,
+          "test_mse": 11.8342,
+          "test_mae": 2.8646,
+          "mono_violation_rate": 0.2665,
+          "arr_corr": -0.7934,
+          "cap_corr": 0.9836,
+          "train_seconds": 0.726,
+          "composite_rank": 1
+        },
+        "baseline_no_penalty": {
+          "alpha_mono": 0.0,
+          "alpha_arr": 0.0,
+          "alpha_cap": 0.0,
+          "test_mse": 14.9064,
+          "test_mae": 3.2989,
+          "mono_violation_rate": 0.2814,
+          "arr_corr": -0.7943,
+          "cap_corr": 0.9822,
+          "train_seconds": 0.483
+        }
+      }
+    },
+    "lobo_cv": {
+      "status": "ok",
+      "seconds": 0.1,
+      "head": {
+        "seeds": [
+          42,
+          43,
+          44
+        ],
+        "nasa_only_overall_mae": 5.4862,
+        "combined_overall_mae": 15.2592
+      }
+    },
+    "tent_adapt": {
+      "status": "ok",
+      "seconds": 0.02,
+      "head": {
+        "baseline_no_adapt": {
+          "mae": 1802.1007,
+          "rmse": 3146.6129,
+          "r2": -11243.1084
+        },
+        "tent_scaler_only": {
+          "mae": 63.7224,
+          "rmse": 66.1479,
+          "r2": -3.969
+        },
+        "tent_full_self_train": {
+          "mae": 1801.9311,
+          "rmse": 3145.7537,
+          "r2": -11236.9691
+        },
+        "oracle_labelled_target": {
+          "mae": 0.0703,
+          "rmse": 0.1211,
+          "r2": 1.0
+        },
+        "shift_diagnostics": {
+          "mean_abs_diff": 165.502,
+          "std_ratio": 51.706
+        }
+      }
+    },
+    "curriculum": {
+      "status": "ok",
+      "seconds": 1.16,
+      "head": {
+        "verdict": "no_significant_gain",
+        "aggregates": {
+          "random": {
+            "test_mae_mean": 0.09315,
+            "test_mae_std": 0.04336,
+            "tail_mae_mean": 0.09261,
+            "tail_mae_std": 0.05471,
+            "n_seeds": 5
+          },
+          "easy_first": {
+            "test_mae_mean": 0.09158,
+            "test_mae_std": 0.04136,
+            "tail_mae_mean": 0.08382,
+            "tail_mae_std": 0.04851,
+            "n_seeds": 5
+          },
+          "hard_first": {
+            "test_mae_mean": 0.092,
+            "test_mae_std": 0.04251,
+            "tail_mae_mean": 0.08909,
+            "tail_mae_std": 0.04822,
+            "n_seeds": 5
+          }
+        }
+      }
+    },
+    "ssl_contrastive": {
+      "status": "ok",
+      "seconds": 2.08,
+      "head": {
+        "verdict": "contrastive_no_benefit_over_linear_baselines",
+        "raw": {
+          "mae": 4.61618,
+          "r2": 0.81772
+        },
+        "pca": {
+          "mae": 5.32962,
+          "r2": 0.75111
+        },
+        "contrastive": {
+          "mae_mean": 6.28202,
+          "mae_std": 1.18128,
+          "r2_mean": 0.55157,
+          "r2_std": 0.1905
+        }
+      }
+    }
+  },
+  "total_seconds": 88.87,
+  "finished_at": "2026-04-24T17:54:46"
+}

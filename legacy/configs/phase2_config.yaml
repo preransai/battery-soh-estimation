@@ -1,0 +1,230 @@
+# Phase-2 Configuration: Research-Grade Validation
+# All experiments must be reproducible, audited, and validated
+
+# Random Seeds (for reproducibility)
+random_seed: 42
+torch_seed: 42
+numpy_seed: 42
+
+# Datasets for Phase-2
+datasets:
+  nasa_train:
+    battery_id: "B0005"
+    path: "NASA_DataSets/1. BatteryAgingARC-FY08Q4/B0005.mat"
+    role: "train"
+    
+  nasa_test_1:
+    battery_id: "B0006"
+    path: "NASA_DataSets/1. BatteryAgingARC-FY08Q4/B0006.mat"
+    role: "test"
+    
+  nasa_test_2:
+    battery_id: "B0007"
+    path: "NASA_DataSets/1. BatteryAgingARC-FY08Q4/B0007.mat"
+    role: "test"
+    
+  mendeley:
+    path: "MENDELEY_Lithium-ion battery degradation dataset based on a realistic forklift operation profile/"
+    cells: ["Cell1", "Cell2", "Cell3"]
+    role: "cross_dataset"
+
+# Data Audit Configuration
+audit:
+  voltage_range: [2.0, 4.3]  # V
+  current_range: [-50, 50]   # A
+  temperature_range: [0, 100]  # °C
+  min_data_points: 100
+  max_spike_threshold: 0.5  # V
+  
+  # Verification checks
+  verify_soh_computation: true
+  verify_capacity_monotonic: true  # Should generally decrease
+  plot_random_cycles: 5
+  
+  # Logging
+  save_audit_report: true
+  audit_report_path: "results/phase2/audit_reports/"
+
+# Multi-Dataset Harmonization
+harmonization:
+  # Target sampling rate (Hz)
+  target_sampling_rate: 1.0  # 1 Hz
+  
+  # Normalization strategy
+  normalization:
+    method: "z-score"  # or "minmax"
+    per_battery: true  # Normalize each battery separately
+  
+  # Cycle segmentation
+  cycle_segmentation:
+    method: "voltage_threshold"
+    charge_voltage_min: 4.0  # V
+    discharge_voltage_max: 3.0  # V
+  
+  # Feature consistency checks
+  verify_ica_range: [-10, 10]  # Reasonable dQ/dV range
+  verify_dcir_range: [0, 1]    # Reasonable resistance range (Ohms)
+
+# Baseline Models (Step 3)
+baseline_models:
+  lstm:
+    hidden_size: 128
+    num_layers: 2
+    dropout: 0.2
+    bidirectional: false
+    
+  cnn_lstm:
+    cnn:
+      filters: [32, 64, 64]
+      kernel_size: 3
+      pool_size: 2
+    lstm:
+      hidden_size: 128
+      num_layers: 2
+      dropout: 0.2
+    
+  transformer:
+    d_model: 128
+    nhead: 8
+    num_encoder_layers: 3
+    dim_feedforward: 512
+    dropout: 0.1
+
+# Training Configuration (for all models)
+training:
+  num_runs: 3  # For reproducibility stats
+  batch_size: 16
+  epochs: 100
+  learning_rate: 0.001
+  optimizer: "adam"
+  loss: "mse"
+  early_stopping:
+    patience: 15
+    min_delta: 0.001
+  
+  # Train/Test Split
+  split_ratio: 0.7
+  validation_ratio: 0.15  # From training set
+
+# Multimodal Model (Step 4)
+multimodal:
+  # Numeric branch
+  numeric_encoder:
+    type: "cnn_lstm"
+    output_dim: 128
+  
+  # Semantic branch
+  text_conversion:
+    method: "template"  # or "llm_generated"
+    templates_path: "src/phase2/text_templates.yaml"
+  
+  llm_embeddings:
+    model: "all-mpnet-base-v2"  # Sentence-BERT
+    embedding_dim: 768
+    freeze: true
+  
+  semantic_encoder:
+    hidden_dims: [512, 256, 128]
+    dropout: 0.2
+  
+  # Fusion
+  fusion:
+    type: "cross_attention"  # or "concatenation", "gated"
+    attention_heads: 4
+    output_dim: 256
+  
+  # Regression head
+  regressor:
+    hidden_dims: [128, 64]
+    dropout: 0.2
+
+# Ablation Studies (Step 5)
+ablation:
+  experiments:
+    - name: "numeric_only"
+      features: ["numeric"]
+      
+    - name: "numeric_physics"
+      features: ["numeric", "ica", "dcir", "temperature"]
+      
+    - name: "numeric_semantic"
+      features: ["numeric", "semantic"]
+      
+    - name: "full_multimodal"
+      features: ["numeric", "ica", "dcir", "temperature", "semantic"]
+      
+    - name: "no_ica"
+      features: ["numeric", "dcir", "temperature", "semantic"]
+      
+    - name: "no_dcir"
+      features: ["numeric", "ica", "temperature", "semantic"]
+
+# Cross-Dataset Generalization (Step 6)
+cross_dataset:
+  experiments:
+    - name: "nasa_to_mendeley"
+      train: ["B0005"]
+      test: ["Cell1", "Cell2"]
+      
+    - name: "mendeley_to_nasa"
+      train: ["Cell1"]
+      test: ["B0006", "B0007"]
+
+# Robustness Testing (Step 7)
+robustness:
+  noise_levels:
+    voltage_noise: [0.0, 0.01, 0.05, 0.1]  # std of Gaussian noise (V)
+    current_noise: [0.0, 0.5, 1.0, 2.0]    # std of Gaussian noise (A)
+  
+  missing_data:
+    drop_rates: [0.0, 0.1, 0.2, 0.3]  # Fraction of cycles to drop
+  
+  partial_charge:
+    completion_rates: [1.0, 0.8, 0.6, 0.4]  # Fraction of cycle completed
+
+# Explainability (Step 8)
+explainability:
+  shap:
+    enable: true
+    background_samples: 100
+    
+  attention:
+    visualize: true
+    save_heatmaps: true
+    
+  llm_diagnosis:
+    enable: true
+    model: "gpt-3.5-turbo"  # or local model
+    prompt_template_path: "src/phase2/diagnosis_prompts.yaml"
+    
+    # Diagnosis phases
+    phases:
+      - name: "early"
+        soh_range: [90, 100]
+      - name: "mid"
+        soh_range: [80, 90]
+      - name: "late"
+        soh_range: [70, 80]
+
+# Output Paths
+paths:
+  phase2_root: "results/phase2/"
+  audit_reports: "results/phase2/audit_reports/"
+  harmonized_data: "data/phase2/harmonized/"
+  baseline_models: "models/phase2/baselines/"
+  multimodal_models: "models/phase2/multimodal/"
+  ablation_results: "results/phase2/ablation/"
+  cross_dataset_results: "results/phase2/cross_dataset/"
+  robustness_results: "results/phase2/robustness/"
+  explainability_results: "results/phase2/explainability/"
+  figures: "results/phase2/figures/"
+  logs: "results/phase2/logs/"
+  final_report: "results/phase2/final_report/"
+
+# Logging
+logging:
+  level: "INFO"
+  save_to_file: true
+  experiment_tracking: true  # Track all experiments
+  log_hyperparameters: true
+  log_gradients: false  # Can slow down training

@@ -1,0 +1,13 @@
+# Normalise line endings in the repository.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gz binary
+*.mat binary
+
+# Keep the GitHub language bar representative of the maintained code:
+# the v1 notebooks and frozen v1 sources are history, not the product.
+legacy/** linguist-documentation
+*.ipynb linguist-documentation
+frontend/assets/vendor/** linguist-vendored

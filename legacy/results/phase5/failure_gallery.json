@@ -1,0 +1,799 @@
+{
+  "summary": {
+    "n_test": 336,
+    "mae": 0.8997914198227311,
+    "rmse": 1.2055569009034648,
+    "max_over_estimate": 5.64628668854359,
+    "max_under_estimate": 2.909916978691683,
+    "mean_error": 0.13343040396248704,
+    "feature_set": "full_19"
+  },
+  "gallery": {
+    "worst_residual": [
+      {
+        "index": 167,
+        "battery_id": "B0006",
+        "cycle_number": 167,
+        "y_true": 58.769,
+        "y_pred": 64.415,
+        "residual": 5.646,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -8.854
+          ],
+          [
+            "current_mean",
+            -8.227
+          ],
+          [
+            "current_std",
+            4.34
+          ],
+          [
+            "discharge_time",
+            -4.001
+          ],
+          [
+            "capacity",
+            -3.702
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1857,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4242,
+          "voltage_std": 0.261,
+          "voltage_min": 2.42,
+          "voltage_max": 4.1885,
+          "voltage_range": 1.7685,
+          "current_mean": 1.5347,
+          "current_std": 0.8517,
+          "temp_mean": 33.9053,
+          "temp_max": 41.3618,
+          "temp_delta": 16.4541,
+          "temp_std": 4.0718,
+          "discharge_time": 2820.39,
+          "ica_peak_voltage": 3.67,
+          "ica_peak_magnitude": 17912.6836,
+          "ica_mean": 283.7808,
+          "ica_std": 1739.7818,
+          "dcir": 0.3067
+        }
+      },
+      {
+        "index": 164,
+        "battery_id": "B0006",
+        "cycle_number": 164,
+        "y_true": 57.714,
+        "y_pred": 61.764,
+        "residual": 4.05,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -10.204
+          ],
+          [
+            "current_mean",
+            -8.306
+          ],
+          [
+            "temp_delta",
+            6.21
+          ],
+          [
+            "current_std",
+            5.041
+          ],
+          [
+            "discharge_time",
+            -4.533
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1644,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4177,
+          "voltage_std": 0.2567,
+          "voltage_min": 2.5096,
+          "voltage_max": 4.1803,
+          "voltage_range": 1.6707,
+          "current_mean": 1.5149,
+          "current_std": 0.8628,
+          "temp_mean": 33.5991,
+          "temp_max": 41.2612,
+          "temp_delta": 17.4697,
+          "temp_std": 4.4553,
+          "discharge_time": 2793.39,
+          "ica_peak_voltage": 3.599,
+          "ica_peak_magnitude": 1329.6172,
+          "ica_mean": 68.0332,
+          "ica_std": 186.4099,
+          "dcir": 0.2801
+        }
+      },
+      {
+        "index": 165,
+        "battery_id": "B0006",
+        "cycle_number": 165,
+        "y_true": 57.437,
+        "y_pred": 61.255,
+        "residual": 3.819,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -10.904
+          ],
+          [
+            "current_mean",
+            -8.775
+          ],
+          [
+            "temp_delta",
+            6.419
+          ],
+          [
+            "discharge_time",
+            -6.18
+          ],
+          [
+            "current_std",
+            5.554
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1588,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4132,
+          "voltage_std": 0.2625,
+          "voltage_min": 2.429,
+          "voltage_max": 4.1812,
+          "voltage_range": 1.7521,
+          "current_mean": 1.5149,
+          "current_std": 0.8628,
+          "temp_mean": 33.6815,
+          "temp_max": 41.4565,
+          "temp_delta": 17.6536,
+          "temp_std": 4.4965,
+          "discharge_time": 2792.485,
+          "ica_peak_voltage": 3.6309,
+          "ica_peak_magnitude": 7456.1627,
+          "ica_mean": 173.7581,
+          "ica_std": 811.0789,
+          "dcir": 0.3036
+        }
+      },
+      {
+        "index": 161,
+        "battery_id": "B0006",
+        "cycle_number": 161,
+        "y_true": 58.471,
+        "y_pred": 62.225,
+        "residual": 3.754,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -9.305
+          ],
+          [
+            "current_mean",
+            -7.785
+          ],
+          [
+            "temp_delta",
+            5.4
+          ],
+          [
+            "current_std",
+            4.941
+          ],
+          [
+            "temp_std",
+            -4.676
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1797,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4153,
+          "voltage_std": 0.2558,
+          "voltage_min": 2.5155,
+          "voltage_max": 4.1814,
+          "voltage_range": 1.6659,
+          "current_mean": 1.5369,
+          "current_std": 0.8492,
+          "temp_mean": 33.6232,
+          "temp_max": 41.2662,
+          "temp_delta": 17.4601,
+          "temp_std": 4.4712,
+          "discharge_time": 2801.625,
+          "ica_peak_voltage": 3.6779,
+          "ica_peak_magnitude": 960.0481,
+          "ica_mean": 38.4897,
+          "ica_std": 109.1439,
+          "dcir": 0.2808
+        }
+      },
+      {
+        "index": 162,
+        "battery_id": "B0006",
+        "cycle_number": 162,
+        "y_true": 58.22,
+        "y_pred": 61.849,
+        "residual": 3.629,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -11.371
+          ],
+          [
+            "current_mean",
+            -7.692
+          ],
+          [
+            "discharge_time",
+            -6.277
+          ],
+          [
+            "temp_delta",
+            5.58
+          ],
+          [
+            "temp_std",
+            -4.691
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1746,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4134,
+          "voltage_std": 0.2589,
+          "voltage_min": 2.4444,
+          "voltage_max": 4.1808,
+          "voltage_range": 1.7364,
+          "current_mean": 1.5301,
+          "current_std": 0.8538,
+          "temp_mean": 33.5609,
+          "temp_max": 41.2748,
+          "temp_delta": 17.5615,
+          "temp_std": 4.4879,
+          "discharge_time": 2802.031,
+          "ica_peak_voltage": 3.491,
+          "ica_peak_magnitude": 2659.4951,
+          "ica_mean": 100.5647,
+          "ica_std": 319.834,
+          "dcir": 0.1309
+        }
+      }
+    ],
+    "worst_overestimate": [
+      {
+        "index": 167,
+        "battery_id": "B0006",
+        "cycle_number": 167,
+        "y_true": 58.769,
+        "y_pred": 64.415,
+        "residual": 5.646,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -8.854
+          ],
+          [
+            "current_mean",
+            -8.227
+          ],
+          [
+            "current_std",
+            4.34
+          ],
+          [
+            "discharge_time",
+            -4.001
+          ],
+          [
+            "capacity",
+            -3.702
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1857,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4242,
+          "voltage_std": 0.261,
+          "voltage_min": 2.42,
+          "voltage_max": 4.1885,
+          "voltage_range": 1.7685,
+          "current_mean": 1.5347,
+          "current_std": 0.8517,
+          "temp_mean": 33.9053,
+          "temp_max": 41.3618,
+          "temp_delta": 16.4541,
+          "temp_std": 4.0718,
+          "discharge_time": 2820.39,
+          "ica_peak_voltage": 3.67,
+          "ica_peak_magnitude": 17912.6836,
+          "ica_mean": 283.7808,
+          "ica_std": 1739.7818,
+          "dcir": 0.3067
+        }
+      },
+      {
+        "index": 164,
+        "battery_id": "B0006",
+        "cycle_number": 164,
+        "y_true": 57.714,
+        "y_pred": 61.764,
+        "residual": 4.05,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -10.204
+          ],
+          [
+            "current_mean",
+            -8.306
+          ],
+          [
+            "temp_delta",
+            6.21
+          ],
+          [
+            "current_std",
+            5.041
+          ],
+          [
+            "discharge_time",
+            -4.533
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1644,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4177,
+          "voltage_std": 0.2567,
+          "voltage_min": 2.5096,
+          "voltage_max": 4.1803,
+          "voltage_range": 1.6707,
+          "current_mean": 1.5149,
+          "current_std": 0.8628,
+          "temp_mean": 33.5991,
+          "temp_max": 41.2612,
+          "temp_delta": 17.4697,
+          "temp_std": 4.4553,
+          "discharge_time": 2793.39,
+          "ica_peak_voltage": 3.599,
+          "ica_peak_magnitude": 1329.6172,
+          "ica_mean": 68.0332,
+          "ica_std": 186.4099,
+          "dcir": 0.2801
+        }
+      },
+      {
+        "index": 165,
+        "battery_id": "B0006",
+        "cycle_number": 165,
+        "y_true": 57.437,
+        "y_pred": 61.255,
+        "residual": 3.819,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -10.904
+          ],
+          [
+            "current_mean",
+            -8.775
+          ],
+          [
+            "temp_delta",
+            6.419
+          ],
+          [
+            "discharge_time",
+            -6.18
+          ],
+          [
+            "current_std",
+            5.554
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1588,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4132,
+          "voltage_std": 0.2625,
+          "voltage_min": 2.429,
+          "voltage_max": 4.1812,
+          "voltage_range": 1.7521,
+          "current_mean": 1.5149,
+          "current_std": 0.8628,
+          "temp_mean": 33.6815,
+          "temp_max": 41.4565,
+          "temp_delta": 17.6536,
+          "temp_std": 4.4965,
+          "discharge_time": 2792.485,
+          "ica_peak_voltage": 3.6309,
+          "ica_peak_magnitude": 7456.1627,
+          "ica_mean": 173.7581,
+          "ica_std": 811.0789,
+          "dcir": 0.3036
+        }
+      },
+      {
+        "index": 161,
+        "battery_id": "B0006",
+        "cycle_number": 161,
+        "y_true": 58.471,
+        "y_pred": 62.225,
+        "residual": 3.754,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -9.305
+          ],
+          [
+            "current_mean",
+            -7.785
+          ],
+          [
+            "temp_delta",
+            5.4
+          ],
+          [
+            "current_std",
+            4.941
+          ],
+          [
+            "temp_std",
+            -4.676
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1797,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4153,
+          "voltage_std": 0.2558,
+          "voltage_min": 2.5155,
+          "voltage_max": 4.1814,
+          "voltage_range": 1.6659,
+          "current_mean": 1.5369,
+          "current_std": 0.8492,
+          "temp_mean": 33.6232,
+          "temp_max": 41.2662,
+          "temp_delta": 17.4601,
+          "temp_std": 4.4712,
+          "discharge_time": 2801.625,
+          "ica_peak_voltage": 3.6779,
+          "ica_peak_magnitude": 960.0481,
+          "ica_mean": 38.4897,
+          "ica_std": 109.1439,
+          "dcir": 0.2808
+        }
+      },
+      {
+        "index": 162,
+        "battery_id": "B0006",
+        "cycle_number": 162,
+        "y_true": 58.22,
+        "y_pred": 61.849,
+        "residual": 3.629,
+        "residual_direction": "over_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -11.371
+          ],
+          [
+            "current_mean",
+            -7.692
+          ],
+          [
+            "discharge_time",
+            -6.277
+          ],
+          [
+            "temp_delta",
+            5.58
+          ],
+          [
+            "temp_std",
+            -4.691
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.1746,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4134,
+          "voltage_std": 0.2589,
+          "voltage_min": 2.4444,
+          "voltage_max": 4.1808,
+          "voltage_range": 1.7364,
+          "current_mean": 1.5301,
+          "current_std": 0.8538,
+          "temp_mean": 33.5609,
+          "temp_max": 41.2748,
+          "temp_delta": 17.5615,
+          "temp_std": 4.4879,
+          "discharge_time": 2802.031,
+          "ica_peak_voltage": 3.491,
+          "ica_peak_magnitude": 2659.4951,
+          "ica_mean": 100.5647,
+          "ica_std": 319.834,
+          "dcir": 0.1309
+        }
+      }
+    ],
+    "worst_underestimate": [
+      {
+        "index": 334,
+        "battery_id": "B0007",
+        "cycle_number": 166,
+        "y_true": 75.526,
+        "y_pred": 72.616,
+        "residual": -2.91,
+        "residual_direction": "under_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -6.676
+          ],
+          [
+            "discharge_time",
+            -4.783
+          ],
+          [
+            "temp_delta",
+            2.597
+          ],
+          [
+            "capacity",
+            -2.392
+          ],
+          [
+            "current_mean",
+            2.046
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.4218,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4601,
+          "voltage_std": 0.2821,
+          "voltage_min": 2.0887,
+          "voltage_max": 4.1889,
+          "voltage_range": 2.1002,
+          "current_mean": 1.8539,
+          "current_std": 0.4959,
+          "temp_mean": 32.8577,
+          "temp_max": 40.925,
+          "temp_delta": 16.4389,
+          "temp_std": 4.1389,
+          "discharge_time": 2802.016,
+          "ica_peak_voltage": 3.3041,
+          "ica_peak_magnitude": 30.2866,
+          "ica_mean": 3.1954,
+          "ica_std": 4.3956,
+          "dcir": 0.3811
+        }
+      },
+      {
+        "index": 316,
+        "battery_id": "B0007",
+        "cycle_number": 148,
+        "y_true": 76.297,
+        "y_pred": 73.824,
+        "residual": -2.473,
+        "residual_direction": "under_estimate",
+        "top_attributions": [
+          [
+            "temp_delta",
+            5.582
+          ],
+          [
+            "voltage_mean",
+            -4.724
+          ],
+          [
+            "discharge_time",
+            -4.691
+          ],
+          [
+            "temp_std",
+            -3.95
+          ],
+          [
+            "capacity",
+            -2.011
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.4363,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4635,
+          "voltage_std": 0.2833,
+          "voltage_min": 2.0537,
+          "voltage_max": 4.2001,
+          "voltage_range": 2.1464,
+          "current_mean": 1.8552,
+          "current_std": 0.4938,
+          "temp_mean": 32.6512,
+          "temp_max": 41.106,
+          "temp_delta": 17.4027,
+          "temp_std": 4.3946,
+          "discharge_time": 2828.328,
+          "ica_peak_voltage": 4.2001,
+          "ica_peak_magnitude": 143.0654,
+          "ica_mean": 3.6203,
+          "ica_std": 8.4621,
+          "dcir": 0.3892
+        }
+      },
+      {
+        "index": 317,
+        "battery_id": "B0007",
+        "cycle_number": 149,
+        "y_true": 76.592,
+        "y_pred": 74.136,
+        "residual": -2.456,
+        "residual_direction": "under_estimate",
+        "top_attributions": [
+          [
+            "temp_delta",
+            5.378
+          ],
+          [
+            "voltage_mean",
+            -5.182
+          ],
+          [
+            "discharge_time",
+            -3.887
+          ],
+          [
+            "temp_std",
+            -3.38
+          ],
+          [
+            "current_std",
+            -2.12
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.4419,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4597,
+          "voltage_std": 0.283,
+          "voltage_min": 1.9907,
+          "voltage_max": 4.1899,
+          "voltage_range": 2.1992,
+          "current_mean": 1.8558,
+          "current_std": 0.4931,
+          "temp_mean": 32.3072,
+          "temp_max": 40.7773,
+          "temp_delta": 17.4501,
+          "temp_std": 4.3971,
+          "discharge_time": 2838.265,
+          "ica_peak_voltage": 3.2927,
+          "ica_peak_magnitude": 699.2623,
+          "ica_mean": 17.2013,
+          "ica_std": 75.9953,
+          "dcir": 0.3912
+        }
+      },
+      {
+        "index": 119,
+        "battery_id": "B0006",
+        "cycle_number": 119,
+        "y_true": 68.607,
+        "y_pred": 66.469,
+        "residual": -2.138,
+        "residual_direction": "under_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -10.185
+          ],
+          [
+            "discharge_time",
+            -3.136
+          ],
+          [
+            "temp_max",
+            -2.865
+          ],
+          [
+            "temp_std",
+            -2.506
+          ],
+          [
+            "current_mean",
+            -2.384
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.3842,
+          "data_quality": 1.0,
+          "voltage_mean": 3.4155,
+          "voltage_std": 0.2359,
+          "voltage_min": 2.4605,
+          "voltage_max": 4.1636,
+          "voltage_range": 1.7031,
+          "current_mean": 1.7042,
+          "current_std": 0.7189,
+          "temp_mean": 34.256,
+          "temp_max": 41.6072,
+          "temp_delta": 16.4571,
+          "temp_std": 4.2842,
+          "discharge_time": 2946.031,
+          "ica_peak_voltage": 3.5844,
+          "ica_peak_magnitude": 4639.7674,
+          "ica_mean": 102.245,
+          "ica_std": 468.9872,
+          "dcir": 0.2471
+        }
+      },
+      {
+        "index": 328,
+        "battery_id": "B0007",
+        "cycle_number": 160,
+        "y_true": 75.249,
+        "y_pred": 73.138,
+        "residual": -2.111,
+        "residual_direction": "under_estimate",
+        "top_attributions": [
+          [
+            "voltage_mean",
+            -5.762
+          ],
+          [
+            "discharge_time",
+            -5.278
+          ],
+          [
+            "temp_delta",
+            5.241
+          ],
+          [
+            "temp_std",
+            -4.992
+          ],
+          [
+            "current_mean",
+            2.227
+          ]
+        ],
+        "feature_values": {
+          "capacity": 1.4166,
+          "data_quality": 0.8,
+          "voltage_mean": 3.4572,
+          "voltage_std": 0.2841,
+          "voltage_min": 2.0488,
+          "voltage_max": 4.1987,
+          "voltage_range": 2.1499,
+          "current_mean": 1.8472,
+          "current_std": 0.5076,
+          "temp_mean": 32.5328,
+          "temp_max": 40.9627,
+          "temp_delta": 17.4242,
+          "temp_std": 4.4292,
+          "discharge_time": 2802.422,
+          "ica_peak_voltage": 3.3856,
+          "ica_peak_magnitude": 149.5477,
+          "ica_mean": 6.8021,
+          "ica_std": 20.7844,
+          "dcir": 0.3937
+        }
+      }
+    ]
+  }
+}

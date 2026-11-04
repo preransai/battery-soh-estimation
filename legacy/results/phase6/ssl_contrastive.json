@@ -1,0 +1,45 @@
+{
+  "setup": {
+    "n_unlabelled_pretrain": 504,
+    "n_train_probe": 168,
+    "n_test_probe": 336,
+    "embed_dim": 16,
+    "pretrain_epochs": 40,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "pretrain_wall_seconds": 42.99
+  },
+  "baseline_raw_ridge": {
+    "mae": 4.61618,
+    "r2": 0.81772
+  },
+  "baseline_pca_ridge": {
+    "mae": 5.32962,
+    "r2": 0.75111
+  },
+  "contrastive_probe": {
+    "mae_mean": 6.28202,
+    "mae_std": 1.18128,
+    "r2_mean": 0.55157,
+    "r2_std": 0.1905,
+    "per_seed": [
+      {
+        "mae": 5.95332,
+        "r2": 0.65101
+      },
+      {
+        "mae": 5.02788,
+        "r2": 0.71868
+      },
+      {
+        "mae": 7.86485,
+        "r2": 0.28501
+      }
+    ]
+  },
+  "verdict": "contrastive_no_benefit_over_linear_baselines",
+  "note": "Contrastive encoder uses NT-Xent loss on (gaussian + dropout) augmentations. The strict bar for success is beating BOTH raw-Ridge and PCA-Ridge by at least one seed-std. On 504-row tabular features this bar is hard to clear, and a negative result is a meaningful finding (SSL gains need scale)."
+}

@@ -1,0 +1,177 @@
+# Feature-to-Text Conversion Templates
+# Rule-based templates for converting physics features to natural language
+
+# SOH Status Templates
+soh_status:
+  excellent:
+    range: [95, 100]
+    template: "Battery shows excellent health with SOH at {soh:.1f}%."
+  good:
+    range: [85, 95]
+    template: "Battery is in good condition with SOH at {soh:.1f}%."
+  moderate:
+    range: [75, 85]
+    template: "Battery shows moderate degradation with SOH at {soh:.1f}%."
+  degraded:
+    range: [65, 75]
+    template: "Battery is significantly degraded with SOH at {soh:.1f}%."
+  poor:
+    range: [0, 65]
+    template: "Battery is in poor condition with SOH at {soh:.1f}%, approaching end-of-life."
+
+# Capacity Fade Templates
+capacity_fade:
+  minimal:
+    threshold: 0.95  # capacity_ratio > 0.95
+    template: "Minimal capacity fade observed."
+  slight:
+    threshold: 0.85
+    template: "Slight capacity fade detected, {fade_pct:.1f}% reduction from initial."
+  moderate:
+    threshold: 0.75
+    template: "Moderate capacity fade of {fade_pct:.1f}% indicates aging."
+  significant:
+    threshold: 0.65
+    template: "Significant capacity fade of {fade_pct:.1f}% suggests accelerated degradation."
+  severe:
+    threshold: 0.0
+    template: "Severe capacity fade of {fade_pct:.1f}%, battery approaching end-of-life."
+
+# ICA Peak Shift Templates
+ica_peak:
+  stable:
+    shift_threshold: 0.05  # V
+    template: "ICA peak position stable at {peak_v:.2f}V."
+  slight_shift:
+    shift_threshold: 0.1
+    template: "ICA peak shifted slightly to {peak_v:.2f}V (Δ={shift:.3f}V)."
+  moderate_shift:
+    shift_threshold: 0.2
+    template: "ICA peak shows moderate shift to {peak_v:.2f}V (Δ={shift:.3f}V), indicating structural changes."
+  significant_shift:
+    shift_threshold: 1.0
+    template: "Significant ICA peak shift to {peak_v:.2f}V (Δ={shift:.3f}V), major electrode degradation likely."
+
+# ICA Magnitude Templates
+ica_magnitude:
+  strong:
+    threshold: 0.8  # magnitude_ratio > 0.8
+    template: "ICA peak magnitude remains strong at {magnitude:.3f}."
+  reduced:
+    threshold: 0.6
+    template: "ICA peak magnitude reduced to {magnitude:.3f}, suggesting active material loss."
+  weak:
+    threshold: 0.4
+    template: "Weak ICA peak magnitude at {magnitude:.3f}, significant capacity loss indicated."
+  very_weak:
+    threshold: 0.0
+    template: "Very weak ICA signal at {magnitude:.3f}, severe degradation evident."
+
+# Internal Resistance (DCIR) Templates
+dcir:
+  low:
+    threshold: 0.05  # Ohms
+    template: "Internal resistance is low at {dcir:.4f}Ω, indicating healthy electrode interfaces."
+  normal:
+    threshold: 0.1
+    template: "Internal resistance at {dcir:.4f}Ω is within normal range."
+  elevated:
+    threshold: 0.2
+    template: "Elevated internal resistance at {dcir:.4f}Ω suggests SEI layer growth."
+  high:
+    threshold: 0.5
+    template: "High internal resistance at {dcir:.4f}Ω indicates significant impedance buildup."
+  very_high:
+    threshold: 1.0
+    template: "Very high resistance at {dcir:.4f}Ω, major degradation mechanisms active."
+
+# Temperature Behavior Templates
+temperature:
+  stable:
+    delta_threshold: 2.0  # °C
+    template: "Temperature remains stable (ΔT={delta_t:.1f}°C)."
+  mild_variation:
+    delta_threshold: 5.0
+    template: "Mild temperature variation observed (ΔT={delta_t:.1f}°C)."
+  moderate_variation:
+    delta_threshold: 10.0
+    template: "Moderate temperature variation (ΔT={delta_t:.1f}°C) detected during cycling."
+  high_variation:
+    delta_threshold: 100.0
+    template: "High temperature variation (ΔT={delta_t:.1f}°C) may accelerate degradation."
+
+# Voltage Behavior Templates
+voltage:
+  normal_range:
+    range: [2.5, 4.2]
+    template: "Voltage profile normal, ranging from {v_min:.2f}V to {v_max:.2f}V."
+  narrow_range:
+    template: "Narrowed voltage range ({v_min:.2f}V to {v_max:.2f}V) indicates reduced usable capacity."
+  extended_range:
+    template: "Extended voltage range detected, possible overcharge/overdischarge events."
+
+# Cycle Number Context Templates
+cycle_context:
+  early:
+    range: [0, 50]
+    template: "Early lifecycle (cycle {cycle})."
+  mid_early:
+    range: [50, 100]
+    template: "Mid-early lifecycle (cycle {cycle})."
+  mid:
+    range: [100, 150]
+    template: "Mid lifecycle (cycle {cycle})."
+  late:
+    range: [150, 200]
+    template: "Late lifecycle (cycle {cycle})."
+  end_of_life:
+    range: [200, 1000]
+    template: "End-of-life phase (cycle {cycle})."
+
+# Degradation Trend Templates
+degradation_trend:
+  stable:
+    rate_threshold: 0.1  # % per cycle
+    template: "Degradation rate is stable at {rate:.3f}% per cycle."
+  accelerating:
+    template: "Degradation is accelerating, rate increased to {rate:.3f}% per cycle."
+  decelerating:
+    template: "Degradation rate decreasing to {rate:.3f}% per cycle."
+
+# Combined Summary Templates
+summary:
+  healthy: |
+    Battery is healthy at {soh:.1f}% SOH.
+    {capacity_text}
+    {ica_text}
+    {resistance_text}
+    {temperature_text}
+  
+  degrading: |
+    Battery degradation detected at {soh:.1f}% SOH.
+    {capacity_text}
+    {ica_text}
+    {resistance_text}
+    {temperature_text}
+    Recommend monitoring for accelerated aging.
+  
+  critical: |
+    Battery critically degraded at {soh:.1f}% SOH.
+    {capacity_text}
+    {ica_text}
+    {resistance_text}
+    {temperature_text}
+    Battery replacement recommended.
+
+# Diagnosis Templates (for explainability)
+diagnosis:
+  primary_factors:
+    template: "Primary degradation factors: {factors}"
+  
+  recommendations:
+    healthy:
+      template: "Continue normal operation. No immediate action required."
+    monitor:
+      template: "Monitor closely. Consider reducing charge/discharge rates."
+    replace:
+      template: "Replacement recommended within {cycles} cycles."

@@ -1,0 +1,93 @@
+{
+  "started_at": 1777820435.668627,
+  "steps": {
+    "leakage": {
+      "status": "ok",
+      "duration_sec": 11.185,
+      "output_file": "results/phase5/leakage.json",
+      "summary": {
+        "raw_roc_auc": 1.0,
+        "verdict": "SEVERE leakage (representation encodes source identity)"
+      }
+    },
+    "calibration": {
+      "status": "ok",
+      "duration_sec": 5.225,
+      "output_file": "results/phase5/calibration.json",
+      "summary": {
+        "mode": "split_conformal_main_ridge",
+        "ece": 0.0332,
+        "picp_at_90": 0.9286,
+        "rmse": 1.1629
+      }
+    },
+    "weighted_conformal": {
+      "status": "ok",
+      "duration_sec": 5.148,
+      "output_file": "results/phase5/weighted_conformal.json",
+      "summary": {
+        "plain_cov": 0.14828341855368882,
+        "weighted_cov": 0.1804236669101534,
+        "mean_width_plain": 15.59530227221342,
+        "mean_width_weighted": 18.780227608082296
+      }
+    },
+    "survival_synth": {
+      "status": "ok",
+      "duration_sec": 5.052,
+      "output_file": "results/phase5/survival_synth.json",
+      "summary": {
+        "n_uncensored": 195,
+        "chi2_p": 0.0007158130492925543,
+        "c_index_baseline": 0.46152904699738906
+      }
+    },
+    "causal_shap": {
+      "status": "ok",
+      "duration_sec": 5.271,
+      "output_file": "results/phase5/causal_shap.json",
+      "summary": {
+        "top_obs": [
+          "capacity",
+          "cycle_number",
+          "discharge_time"
+        ],
+        "top_int": [
+          "capacity",
+          "cycle_number",
+          "discharge_time"
+        ]
+      }
+    },
+    "counterfactuals": {
+      "status": "ok",
+      "duration_sec": 5.173,
+      "output_file": "results/phase5/counterfactuals.json",
+      "summary": {
+        "n_examples": 5
+      }
+    },
+    "failure_gallery": {
+      "status": "ok",
+      "duration_sec": 5.068,
+      "output_file": "results/phase5/failure_gallery.json",
+      "summary": {
+        "n_test": 336,
+        "mae": 0.8997914198227311,
+        "rmse": 1.2055569009034648,
+        "max_over_estimate": 5.64628668854359,
+        "max_under_estimate": 2.909916978691683,
+        "mean_error": 0.13343040396248704,
+        "feature_set": "full_19"
+      }
+    }
+  },
+  "ended_at": 1777820477.7923062,
+  "total_duration_sec": 42.124,
+  "compute": {
+    "n_runs": 24,
+    "total_duration_sec": 138.21,
+    "total_emissions_kg_co2": 2.2e-05,
+    "total_energy_kwh": 3.2e-05
+  }
+}

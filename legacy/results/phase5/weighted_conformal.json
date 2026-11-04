@@ -1,0 +1,29 @@
+{
+  "plain_conformal": {
+    "target_coverage": 0.9,
+    "empirical_coverage": 0.14828341855368882,
+    "mean_width": 15.59530227221342,
+    "median_width": 15.595302272213502,
+    "n": 2738
+  },
+  "weighted_conformal": {
+    "target": 0.9,
+    "empirical": 0.1804236669101534,
+    "mean_width": 18.780227608082296,
+    "median_width": 18.780227608082356,
+    "n": 2738
+  },
+  "likelihood_ratio_stats": {
+    "mean": 9.993840557708348,
+    "median": 10.0,
+    "max": 10.0,
+    "min": 2.649992394845972
+  },
+  "setup": {
+    "calibration_source": "NASA (60% of NASA cycles)",
+    "test_target": "all MENDELEY cycles",
+    "alpha": 0.1,
+    "n_calib": 302,
+    "n_target": 2738
+  }
+}

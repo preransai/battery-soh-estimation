@@ -1,0 +1,103 @@
+# Phase-1 Configuration for NASA B0005 Battery Analysis
+
+# Dataset Configuration
+dataset:
+  name: "NASA_B0005"
+  path: "NASA_DataSets/1. BatteryAgingARC-FY08Q4/B0005.mat"
+  battery_id: "B0005"
+  rated_capacity: 2.0  # Ah
+  eol_capacity: 1.4    # Ah (30% fade)
+
+# Cycle Filtering Criteria
+filtering:
+  min_data_points: 100
+  voltage_min: 2.0  # V
+  voltage_max: 4.3  # V
+  detect_spikes: true
+  spike_threshold: 0.5  # V - sudden change threshold
+  remove_incomplete: true
+
+# Feature Extraction
+features:
+  # SOH calculation
+  soh:
+    method: "capacity_based"
+    initial_capacity_cycles: 5  # Average first N cycles for initial capacity
+  
+  # ICA (Incremental Capacity Analysis)
+  ica:
+    smoothing: "savgol"
+    window_length: 11
+    polyorder: 3
+    voltage_range: [2.5, 4.2]  # V - region of interest
+    peak_detection:
+      prominence: 0.01
+      width: 5
+  
+  # DCIR (DC Internal Resistance)
+  dcir:
+    method: "voltage_drop"
+    current_threshold: 1.0  # A - minimum current for calculation
+  
+  # Temperature features
+  temperature:
+    compute_delta: true
+    compute_mean: true
+    compute_max: true
+    compute_std: true
+
+# Data Split
+split:
+  method: "time_based"
+  train_ratio: 0.7
+  test_ratio: 0.3
+  shuffle: false  # NEVER shuffle time-series battery data
+
+# Baseline Model (CNN-LSTM)
+model:
+  name: "CNN_LSTM_Baseline"
+  architecture:
+    cnn:
+      filters: [32, 64, 64]
+      kernel_size: 3
+      pool_size: 2
+    lstm:
+      hidden_size: 128
+      num_layers: 2
+      dropout: 0.2
+    fc:
+      hidden_dims: [64, 32]
+  
+  training:
+    batch_size: 16
+    epochs: 100
+    learning_rate: 0.001
+    optimizer: "adam"
+    loss: "mse"
+    early_stopping:
+      patience: 15
+      min_delta: 0.001
+
+# Sequence Configuration (for temporal models)
+sequence:
+  lookback_cycles: 10  # Use last N cycles to predict current SOH
+  normalize: true
+  normalization_method: "minmax"
+
+# Output Paths
+paths:
+  processed_data: "data/processed/"
+  features: "data/features/"
+  models: "models/"
+  plots: "results/plots/"
+  logs: "results/logs/"
+  checkpoints: "models/checkpoints/"
+
+# Logging
+logging:
+  level: "INFO"
+  save_to_file: true
+  log_file: "results/logs/phase1.log"
+
+# Reproducibility
+random_seed: 42

@@ -1,0 +1,410 @@
+{
+  "n_samples": 10,
+  "template_mae_via_top_hit": 11.24,
+  "llm_mae_via_top_hit": 11.24,
+  "llm_actually_used": 10,
+  "llm_fallback_rate": 0.0,
+  "note": "MAE is computed as |top-hit.soh - true.soh| because the RAP endpoint does not re-predict SOH. For a true prediction-level comparison, route the diagnosis text through the cross-attention predictor and re-score; that requires the full multimodal stack and is left as follow-up.",
+  "samples": [
+    {
+      "features": {
+        "capacity": 1.8451997961855775,
+        "cycle_number": 28.0,
+        "voltage_min": 2.50655393192554,
+        "voltage_max": 4.172855366745132,
+        "temp_mean": 31.09796765306451,
+        "discharge_time": 3410.718,
+        "charges_per_day": 1.0
+      },
+      "true_soh": 91.4586545806502,
+      "template_diagnosis": "Closest historical analogue: battery B0006 at cycle 64 (SOH 78.5%, cosine distance 0.343). Reading: Battery degradation detected at 78.5% SOH.\nSlight capacity fade detected, 14.7% reduction from initial.\nICA peak shows moderate shift to 3.37V (\u00ce\u201d=0.100V), indicating structural changes. ICA peak magnitude remains strong at 628.831.\nHigh internal resistance at 0.2081\u00ce\u00a9 indicates significant impedance buildup.\nHigh temperature variation (\u00ce\u201dT=14.9\u00c2\u00b0C) may accelerate degradation.\nRecommend monitoring for accelerated aging.",
+      "llm_diagnosis": "The most likely degradation mode for the query battery is capacity fade due to structural changes and impedance buildup, as evidenced by the moderate voltage range (2.507-4.173V) and relatively high mean temperature (31.098\u00b0C). The retrieved analogues, which exhibit similar features and degradation patterns, also show signs of capacity fade, with reductions ranging from 10.0% to 16.4% from initial capacity, and moderate shifts in ICA peak positions, indicating structural changes. The presence of high internal resistance in the analogues, such as 0.2081\u03a9 and 0.2143\u03a9, further supports the likelihood of impedance buildup. As a result, it is recommended to monitor the battery's state of health closely and consider reducing the operating temperature to mitigate accelerated aging.",
+      "template_used_llm": false,
+      "llm_used_llm": true,
+      "template_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.34321796894073486
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3511052131652832
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3703882694244385
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.37183767557144165
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.38636314868927
+        }
+      ],
+      "llm_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.34321796894073486
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3511052131652832
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3703882694244385
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.37183767557144165
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.38636314868927
+        }
+      ]
+    },
+    {
+      "features": {
+        "capacity": 1.5959174487005665,
+        "cycle_number": 85.0,
+        "voltage_min": 2.1049522925630426,
+        "voltage_max": 4.201472345711643,
+        "temp_mean": 32.087443943383064,
+        "discharge_time": 3058.157,
+        "charges_per_day": 1.0
+      },
+      "true_soh": 84.77582688520731,
+      "template_diagnosis": "Closest historical analogue: battery B0006 at cycle 64 (SOH 78.5%, cosine distance 0.330). Reading: Battery degradation detected at 78.5% SOH.\nSlight capacity fade detected, 14.7% reduction from initial.\nICA peak shows moderate shift to 3.37V (\u00ce\u201d=0.100V), indicating structural changes. ICA peak magnitude remains strong at 628.831.\nHigh internal resistance at 0.2081\u00ce\u00a9 indicates significant impedance buildup.\nHigh temperature variation (\u00ce\u201dT=14.9\u00c2\u00b0C) may accelerate degradation.\nRecommend monitoring for accelerated aging.",
+      "llm_diagnosis": "The query cycle's features, particularly its moderate capacity loss and high internal resistance indications (inferred from the high discharge time and temperature mean), suggest that the most likely degradation mode is accelerated aging due to impedance buildup and elevated temperature variation. This diagnosis is supported by the retrieved analogues, which all exhibit similar characteristics, including high internal resistance, moderate to slight capacity fade, and high temperature variations, with Analogue 1 being the most similar. The presence of structural changes, as indicated by the ICA peak shifts in the analogues, further supports this diagnosis. As a result, it is recommended to monitor the battery's temperature and adjust operational parameters to mitigate further acceleration of aging.",
+      "template_used_llm": false,
+      "llm_used_llm": true,
+      "template_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.3301001191139221
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3517315983772278
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3789409399032593
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3828892707824707
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.3830370306968689
+        }
+      ],
+      "llm_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.3301001191139221
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3517315983772278
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3789409399032593
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3828892707824707
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.3830370306968689
+        }
+      ]
+    },
+    {
+      "features": {
+        "capacity": 1.857228890885317,
+        "cycle_number": 29.0,
+        "voltage_min": 2.2961380197803,
+        "voltage_max": 4.188187801734904,
+        "temp_mean": 31.05343868903492,
+        "discharge_time": 3392.719,
+        "charges_per_day": 1.0
+      },
+      "true_soh": 92.05488530825792,
+      "template_diagnosis": "Closest historical analogue: battery B0006 at cycle 64 (SOH 78.5%, cosine distance 0.346). Reading: Battery degradation detected at 78.5% SOH.\nSlight capacity fade detected, 14.7% reduction from initial.\nICA peak shows moderate shift to 3.37V (\u00ce\u201d=0.100V), indicating structural changes. ICA peak magnitude remains strong at 628.831.\nHigh internal resistance at 0.2081\u00ce\u00a9 indicates significant impedance buildup.\nHigh temperature variation (\u00ce\u201dT=14.9\u00c2\u00b0C) may accelerate degradation.\nRecommend monitoring for accelerated aging.",
+      "llm_diagnosis": "The most likely degradation mode for the query battery is capacity fade due to structural changes and impedance buildup, as evidenced by the moderate voltage range (2.296-4.188V) and relatively high mean temperature (31.053\u00b0C) in the query features. This diagnosis is supported by the retrieved analogues, which all exhibit slight to moderate capacity fade and elevated internal resistance, with Analogue 1 showing a significant impedance buildup and a moderate shift in the ICA peak. The similarity between the query features and the analogues, particularly in terms of temperature variation and voltage characteristics, suggests that the query battery may be experiencing accelerated aging. As a result, it is recommended to monitor the battery's state of health closely to prevent further degradation and potential failure.",
+      "template_used_llm": false,
+      "llm_used_llm": true,
+      "template_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.346413791179657
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3590961694717407
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3779994249343872
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.3804842233657837
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3938683271408081
+        }
+      ],
+      "llm_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.346413791179657
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3590961694717407
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3779994249343872
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.3804842233657837
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3938683271408081
+        }
+      ]
+    },
+    {
+      "features": {
+        "capacity": 1.8150756899575575,
+        "cycle_number": 47.0,
+        "voltage_min": 2.1809272860788376,
+        "voltage_max": 4.191916354433964,
+        "temp_mean": 33.883578684522384,
+        "discharge_time": 3328.937,
+        "charges_per_day": 1.0
+      },
+      "true_soh": 96.4176076905973,
+      "template_diagnosis": "Closest historical analogue: battery B0006 at cycle 64 (SOH 78.5%, cosine distance 0.336). Reading: Battery degradation detected at 78.5% SOH.\nSlight capacity fade detected, 14.7% reduction from initial.\nICA peak shows moderate shift to 3.37V (\u00ce\u201d=0.100V), indicating structural changes. ICA peak magnitude remains strong at 628.831.\nHigh internal resistance at 0.2081\u00ce\u00a9 indicates significant impedance buildup.\nHigh temperature variation (\u00ce\u201dT=14.9\u00c2\u00b0C) may accelerate degradation.\nRecommend monitoring for accelerated aging.",
+      "llm_diagnosis": "The query cycle's features, particularly its moderate capacity of 1.815 and relatively high mean temperature of 33.884, suggest that the most likely degradation mode is accelerated aging due to high temperature variation, similar to the retrieved analogues. The analogues, which exhibit slight to moderate capacity fade and elevated internal resistance, support this diagnosis, with Analogue 1's high internal resistance and Analogue 5's moderate capacity fade being particularly indicative of this mode. Given the similarities between the query cycle and the analogues, it is recommended to monitor the battery's state of health closely to mitigate the effects of accelerated aging, and to consider implementing temperature control measures to slow down the degradation process.",
+      "template_used_llm": false,
+      "llm_used_llm": true,
+      "template_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.33643198013305664
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3573994040489197
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3871000409126282
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.3890491724014282
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3892643451690674
+        }
+      ],
+      "llm_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.33643198013305664
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3573994040489197
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.3871000409126282
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 55,
+          "soh": 82.8479509668574,
+          "cosine_distance": 0.3890491724014282
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3892643451690674
+        }
+      ]
+    },
+    {
+      "features": {
+        "capacity": 1.263763942644078,
+        "cycle_number": 144.0,
+        "voltage_min": 2.487315701343957,
+        "voltage_max": 4.178720701637815,
+        "temp_mean": 33.240616061167685,
+        "discharge_time": 2847.36,
+        "charges_per_day": 1.0
+      },
+      "true_soh": 62.63936845251031,
+      "template_diagnosis": "Closest historical analogue: battery B0006 at cycle 64 (SOH 78.5%, cosine distance 0.306). Reading: Battery degradation detected at 78.5% SOH.\nSlight capacity fade detected, 14.7% reduction from initial.\nICA peak shows moderate shift to 3.37V (\u00ce\u201d=0.100V), indicating structural changes. ICA peak magnitude remains strong at 628.831.\nHigh internal resistance at 0.2081\u00ce\u00a9 indicates significant impedance buildup.\nHigh temperature variation (\u00ce\u201dT=14.9\u00c2\u00b0C) may accelerate degradation.\nRecommend monitoring for accelerated aging.",
+      "llm_diagnosis": "The most likely degradation mode for the query battery is capacity fade due to structural changes and impedance buildup, as evidenced by the moderate voltage shift and high internal resistance observed in the analogues. The query features, such as the relatively low capacity of 1.264 and high mean temperature of 33.241, support this diagnosis, and are similar to the conditions seen in the analogues, which exhibit capacity fade and high internal resistance. The presence of high temperature variation in the analogues, which may accelerate degradation, suggests that the query battery should be operated at a lower temperature to mitigate further aging.",
+      "template_used_llm": false,
+      "llm_used_llm": true,
+      "template_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.30564314126968384
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3253505825996399
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3538020849227905
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.36195284128189087
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 66,
+          "soh": 77.38916838478022,
+          "cosine_distance": 0.36234885454177856
+        }
+      ],
+      "llm_hits": [
+        {
+          "battery_id": "B0006",
+          "cycle_number": 64,
+          "soh": 78.46114405771068,
+          "cosine_distance": 0.30564314126968384
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 63,
+          "soh": 78.69188922732391,
+          "cosine_distance": 0.3253505825996399
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 67,
+          "soh": 76.8849152752996,
+          "cosine_distance": 0.3538020849227905
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 56,
+          "soh": 82.31672078137447,
+          "cosine_distance": 0.36195284128189087
+        },
+        {
+          "battery_id": "B0006",
+          "cycle_number": 66,
+          "soh": 77.38916838478022,
+          "cosine_distance": 0.36234885454177856
+        }
+      ]
+    }
+  ]
+}

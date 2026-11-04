@@ -1,0 +1,52 @@
+version: 2
+
+updates:
+  # Python dependencies declared in pyproject.toml ([project] + optional extras). CI and the
+  # Docker image install exact versions from requirements/constraints.txt and
+  # requirements/runtime.lock (refresh procedure: requirements/README.md). A version change
+  # there can move committed results, so it is merged only with CI green, i.e. with the
+  # committed results still reproducing (or regenerated in the same change).
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      dev-tools:
+        patterns: ["pytest*", "hypothesis", "httpx", "ruff", "mypy", "types-*", "pre-commit"]
+      scientific-stack:
+        patterns: ["numpy", "pandas", "scipy", "scikit-learn"]
+      api-stack:
+        patterns: ["fastapi", "uvicorn", "pydantic", "pydantic-settings", "prometheus-client"]
+
+  # Actions used by .github/workflows/*.yml. They are pinned to full commit SHAs with a
+  # `# vX.Y.Z` comment; Dependabot proposes new SHAs and rewrites the comment with them.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # Base image of the Dockerfile. Moving to another Python minor version is a deliberate
+  # change (it goes together with the CI matrix and requires-python), so minor/major tag
+  # bumps are ignored. The base image is pinned by digest
+  # (FROM python:3.11-slim@sha256:...), so Dependabot proposes a weekly digest refresh,
+  # i.e. Debian and CPython security patches.
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "build(docker)"
+    ignore:
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

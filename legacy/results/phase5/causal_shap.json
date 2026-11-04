@@ -1,0 +1,68 @@
+{
+  "feature_set": "simple_6",
+  "n_instances": 20,
+  "n_background": 64,
+  "n_permutations": 24,
+  "rankings": {
+    "observational": [
+      [
+        "capacity",
+        7.800733439357311
+      ],
+      [
+        "cycle_number",
+        1.2224737128795249
+      ],
+      [
+        "discharge_time",
+        0.40657759748730626
+      ],
+      [
+        "voltage_max",
+        0.3024182687566543
+      ],
+      [
+        "voltage_min",
+        0.1905509315390324
+      ],
+      [
+        "temp_mean",
+        0.14524415019023595
+      ]
+    ],
+    "interventional": [
+      [
+        "capacity",
+        7.700007947057381
+      ],
+      [
+        "cycle_number",
+        1.3192348830862433
+      ],
+      [
+        "discharge_time",
+        0.436837955968003
+      ],
+      [
+        "voltage_max",
+        0.3043601845079166
+      ],
+      [
+        "voltage_min",
+        0.1914534700220495
+      ],
+      [
+        "temp_mean",
+        0.15206744733550012
+      ]
+    ]
+  },
+  "mean_abs_disagreement": {
+    "capacity": 2.0934,
+    "cycle_number": 0.2591,
+    "voltage_min": 0.0033,
+    "voltage_max": 0.0322,
+    "temp_mean": 0.0284,
+    "discharge_time": 0.0964
+  }
+}

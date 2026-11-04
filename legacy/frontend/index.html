@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery SOH Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/css/shepherd.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js"></script>
+
+    <style>
+    /* =============== design tokens =============== */
+    :root {
+        --bg:            #f4f6fb;
+        --surface:       #ffffff;
+        --surface-alt:   #f9fafb;
+        --border:        #e5e7eb;
+        --border-strong: #d1d5db;
+        --text:          #111827;
+        --text-muted:    #6b7280;
+        --text-soft:     #9ca3af;
+        --primary:       #2563eb;
+        --primary-700:   #1d4ed8;
+        --primary-soft:  #eff6ff;
+        --accent:        #7c3aed;
+        --success:       #059669;
+        --success-soft:  #ecfdf5;
+        --warning:       #d97706;
+        --warning-soft:  #fffbeb;
+        --danger:        #dc2626;
+        --danger-soft:   #fef2f2;
+        --soh: 0;
+        --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+        --shadow-md: 0 2px 4px rgba(15,23,42,.05), 0 4px 12px rgba(15,23,42,.06);
+        --shadow-lg: 0 8px 24px rgba(15,23,42,.08);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+    }
+    body.dark {
+        --bg:            #0b0f1a;
+        --surface:       #111827;
+        --surface-alt:   #0f1525;
+        --border:        #1f2937;
+        --border-strong: #374151;
+        --text:          #e5e7eb;
+        --text-muted:    #9ca3af;
+        --text-soft:     #6b7280;
+        --primary:       #3b82f6;
+        --primary-soft:  #1e3a8a33;
+        --accent:        #a78bfa;
+        --success-soft:  #064e3b33;
+        --warning-soft:  #78350f33;
+        --danger-soft:   #7f1d1d33;
+    }
+
+    /* =============== base =============== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin:0; padding:0; }
+    body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.5;
+        transition: background-color .25s, color .25s;
+        font-feature-settings: 'cv11', 'ss01';
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    h1, h2, h3, h4 { color: var(--text); letter-spacing: -0.01em; font-weight: 600; }
+    h2 { font-size: 1.05rem; }
+    h3 { font-size: 0.95rem; }
+    p, span, div, label, li, td, th { color: inherit; }
+    .text-muted { color: var(--text-muted); }
+    .text-soft  { color: var(--text-soft); }
+
+    /* =============== container =============== */
+    .app {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+    }
+
+    /* =============== header / topbar =============== */
+    .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 16px;
+    }
+    .brand {
+        display: flex; align-items: center; gap: 12px;
+    }
+    .logo {
+        width: 38px; height: 38px; border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 15px;
+        box-shadow: var(--shadow-sm);
+    }
+    .brand-text .title { font-weight: 600; font-size: 15px; line-height: 1.2; }
+    .brand-text .sub   { color: var(--text-muted); font-size: 11px; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 10px; border-radius: 999px;
+        background: var(--success-soft); color: var(--success);
+        font-size: 11px; font-weight: 500;
+    }
+    .status-pill.offline { background: var(--danger-soft); color: var(--danger); }
+    .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* =============== buttons =============== */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        font-family: inherit; font-size: 13px; font-weight: 500;
+        padding: 8px 14px; border-radius: var(--radius-sm);
+        border: 1px solid transparent; cursor: pointer;
+        transition: all .15s ease;
+        white-space: nowrap;
+    }
+    .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-700); }
+    .btn-accent  { background: var(--accent); color: #fff; }
+    .btn-ghost   { background: transparent; color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--surface-alt); }
+    .btn-subtle  { background: var(--surface-alt); color: var(--text); border-color: var(--border); }
+    .btn-subtle:hover { border-color: var(--border-strong); }
+    .btn-danger  { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; }
+    .btn-block { width: 100%; }
+    .btn-icon { width: 34px; height: 34px; padding: 0; }
+
+    /* =============== tabs =============== */
+    .tabs {
+        display: flex; gap: 4px; flex-wrap: wrap;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 4px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+    .tab-btn {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 12.5px; font-weight: 500;
+        color: var(--text-muted);
+        border: 0; background: transparent;
+        cursor: pointer;
+        transition: background-color .15s, color .15s;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab-btn:hover { background: var(--surface-alt); color: var(--text); }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+    .tab-btn.active i { color: #fff; }
+    .tab-btn .badge {
+        background: var(--danger); color: #fff;
+        font-size: 9px; padding: 1px 5px; border-radius: 999px; font-weight: 600;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    /* =============== cards =============== */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+    .card h2 { margin: 0 0 4px; }
+    .card .subtitle { color: var(--text-muted); font-size: 12.5px; margin-bottom: 18px; }
+    .card-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 12px; margin-bottom: 16px;
+    }
+    .card-header .title-group h2 { margin-bottom: 4px; }
+    .card-header .title-group .subtitle { margin: 0; }
+    .section-title {
+        font-size: 11px; font-weight: 600; letter-spacing: .08em;
+        text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+    }
+
+    /* =============== form controls =============== */
+    .field {
+        display: flex; flex-direction: column; gap: 6px;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        transition: border-color .15s;
+    }
+    .field:hover { border-color: var(--border-strong); }
+    .field-label {
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 12.5px; font-weight: 500;
+    }
+    .field-hint { color: var(--text-muted); font-weight: 400; font-size: 11px; }
+    .field-row { display: flex; align-items: center; gap: 10px; }
+    .field input[type=number], .field input[type=text] {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-family: inherit; font-size: 13px;
+        background: var(--surface-alt); color: var(--text);
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .field input[type=number]:focus, .field input[type=text]:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+    }
+    input[type=range] {
+        -webkit-appearance: none; appearance: none;
+        width: 100%; height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--primary) var(--p,50%), var(--border) var(--p,50%));
+        outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 16px; height: 16px; border-radius: 50%;
+        background: var(--primary);
+        cursor: pointer; border: 2px solid var(--surface);
+        box-shadow: var(--shadow-sm);
+    }
+    input[type=range]::-moz-range-thumb {
+        width: 16px; height: 16px; border-radius: 50%;
+        background: var(--primary); cursor: pointer;
+        border: 2px solid var(--surface);
+    }
+    .range-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px; font-weight: 500;
+        color: var(--text); min-width: 64px; text-align: right;
+    }
+    select {
+        padding: 7px 10px; font-size: 13px;
+        border: 1px solid var(--border); border-radius: 6px;
+        background: var(--surface); color: var(--text); font-family: inherit;
+    }
+
+    /* =============== stat tiles =============== */
+    .stat-grid {
+        display: grid; gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        display: flex; flex-direction: column; gap: 4px;
+        position: relative; overflow: hidden;
+    }
+    .stat::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--primary);
+    }
+    .stat.success::before { background: var(--success); }
+    .stat.warning::before { background: var(--warning); }
+    .stat.danger::before  { background: var(--danger); }
+    .stat .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .stat .value { font-size: 1.55rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .stat .note  { font-size: 11px; color: var(--text-soft); }
+
+    /* =============== SOH gauge =============== */
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .gauge {
+        width: 170px; height: 170px; border-radius: 50%; position: relative;
+        background: conic-gradient(var(--mc,#9ca3af) 0deg,
+                                    var(--mc,#9ca3af) calc(var(--soh)*3.6deg),
+                                    var(--border) calc(var(--soh)*3.6deg),
+                                    var(--border) 360deg);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .gauge::before {
+        content: ''; position: absolute;
+        width: 135px; height: 135px; border-radius: 50%;
+        background: var(--surface);
+    }
+    .gauge-value { position: relative; z-index: 1; text-align: center; }
+    .gauge-value .num {
+        font-size: 2.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+        line-height: 1;
+    }
+    .gauge-value .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
+    .status-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 12px; border-radius: 999px;
+        font-size: 12px; font-weight: 500;
+        background: var(--surface-alt); color: var(--text-muted);
+    }
+    .status-chip.excellent { background: var(--success-soft); color: var(--success); }
+    .status-chip.good      { background: var(--primary-soft); color: var(--primary); }
+    .status-chip.moderate  { background: var(--warning-soft); color: var(--warning); }
+    .status-chip.poor      { background: var(--danger-soft);  color: var(--danger); }
+
+    /* =============== SHAP bars =============== */
+    .shap-row { display: flex; align-items: center; gap: 8px; height: 22px; font-size: 12px; }
+    .shap-label { width: 140px; text-align: right; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .shap-track { flex: 1; height: 16px; position: relative; }
+    .shap-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border-strong); }
+    .shap-fill { position: absolute; top: 2px; height: 12px; border-radius: 3px; transition: width .4s ease; min-width: 2px; }
+    .shap-fill.pos { background: var(--danger); left: 50%; }
+    .shap-fill.neg { background: var(--primary); right: 50%; }
+    .shap-val { width: 54px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+
+    /* =============== info panels =============== */
+    .panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px;
+        background: var(--surface-alt);
+    }
+    .panel h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .panel.muted { background: var(--surface-alt); }
+    .panel-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .risk-bar-row { margin-bottom: 8px; }
+    .risk-bar-row .head { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 3px; color: var(--text-muted); }
+    .risk-bar-track { height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
+    .risk-bar-fill  { height: 100%; border-radius: inherit; transition: width .4s ease; }
+    ul.ticks { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+    ul.ticks li { padding: 3px 0 3px 16px; position: relative; color: var(--text-muted); }
+    ul.ticks li::before { content: '\2022'; position: absolute; left: 4px; color: var(--primary); }
+
+    /* =============== chat =============== */
+    .chat-msg {
+        max-width: 80%; padding: 9px 13px;
+        border-radius: 14px; font-size: 13px; line-height: 1.45;
+    }
+    .chat-user { background: var(--primary); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
+    .chat-bot  { background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+
+    /* =============== json viewer =============== */
+    .json-pre {
+        background: #0f172a; color: #94a3b8;
+        padding: 14px; border-radius: var(--radius-sm);
+        font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+        max-height: 300px; overflow: auto;
+        white-space: pre-wrap; word-break: break-word;
+    }
+    .json-pre .k { color: #7dd3fc; } .json-pre .s { color: #fbbf24; }
+    .json-pre .n { color: #f472b6; } .json-pre .b { color: #a78bfa; }
+
+    /* =============== modal =============== */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 50; }
+    .modal-bg.show { display: flex; animation: fadeIn .2s ease; }
+    .modal-box {
+        background: var(--surface); color: var(--text);
+        max-width: 560px; width: 92%; max-height: 85vh; overflow-y: auto;
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* =============== dropzone =============== */
+    .dz {
+        border: 2px dashed var(--border-strong);
+        border-radius: var(--radius-md);
+        padding: 22px 16px;
+        text-align: center;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all .15s;
+        background: var(--surface-alt);
+    }
+    .dz:hover, .dz.over {
+        border-color: var(--primary);
+        background: var(--primary-soft);
+        color: var(--primary);
+    }
+    .dz .icon { font-size: 22px; margin-bottom: 6px; display: block; }
+
+    /* =============== tables =============== */
+    table.data { width: 100%; font-size: 13px; border-collapse: collapse; }
+    table.data th { text-align: left; padding: 8px; font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+    table.data td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+    table.data tr:hover { background: var(--surface-alt); }
+
+    /* =============== fab =============== */
+    .fab {
+        position: fixed; bottom: 20px; right: 20px;
+        width: 42px; height: 42px; border-radius: 50%;
+        background: var(--surface); color: var(--text);
+        border: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; box-shadow: var(--shadow-md);
+        transition: transform .15s;
+        z-index: 40;
+    }
+    .fab:hover { transform: translateY(-2px); }
+
+    /* =============== p5 dashboard =============== */
+    .p5card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px;
+        display: flex; flex-direction: column; gap: 6px;
+    }
+    .p5card.ok   { border-left: 3px solid var(--success); }
+    .p5card.warn { border-left: 3px solid var(--warning); }
+    .p5card.bad  { border-left: 3px solid var(--danger); }
+
+    /* =============== misc =============== */
+    .divider { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+    .hidden { display: none !important; }
+    .grid-2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 900px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .grid-3 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+    @media (min-width: 900px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+    .stack > * + * { margin-top: 14px; }
+    .flex { display: flex; } .flex-wrap { flex-wrap: wrap; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+    .text-xs { font-size: 11.5px; } .text-sm { font-size: 13px; } .text-lg { font-size: 16px; }
+    .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; }
+
+    footer.site { text-align: center; color: var(--text-soft); font-size: 11.5px; margin-top: 28px; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* =============== guide + help tooltips =============== */
+    details.guide {
+        background: var(--primary-soft);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--primary);
+        border-radius: var(--radius-md);
+        padding: 0;
+        margin-bottom: 18px;
+        transition: box-shadow .2s;
+    }
+    details.guide[open] { box-shadow: var(--shadow-sm); }
+    details.guide summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--primary-700);
+        font-size: 13.5px;
+        user-select: none;
+    }
+    body.dark details.guide summary { color: var(--primary); }
+    details.guide summary::-webkit-details-marker { display: none; }
+    details.guide summary::before {
+        content: '\f05a';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: var(--primary);
+    }
+    details.guide summary .chev {
+        margin-left: auto;
+        color: var(--text-muted);
+        font-size: 11px;
+        transition: transform .2s;
+    }
+    details.guide[open] summary .chev { transform: rotate(90deg); }
+    details.guide .guide-body {
+        padding: 0 16px 14px 16px;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+    }
+    @media (min-width: 800px) {
+        details.guide .guide-body { grid-template-columns: repeat(3, 1fr); }
+    }
+    .guide-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 12px;
+    }
+    .guide-block h4 {
+        margin: 0 0 6px 0;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .guide-block h4 i { color: var(--primary); }
+    .guide-block ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text); }
+    .guide-block li { margin: 3px 0; }
+    .guide-block p { margin: 0; font-size: 12.5px; color: var(--text); }
+    .guide-block code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; background: var(--surface-alt); padding: 1px 4px; border-radius: 3px; }
+
+    .help-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px; height: 14px;
+        margin-left: 4px;
+        border-radius: 50%;
+        background: var(--surface-alt);
+        border: 1px solid var(--border-strong);
+        color: var(--text-muted);
+        font-size: 9px;
+        font-weight: 700;
+        cursor: help;
+        position: relative;
+        vertical-align: middle;
+    }
+    .help-icon::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #111827;
+        color: #f9fafb;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 400;
+        white-space: normal;
+        width: max-content;
+        max-width: 240px;
+        text-align: left;
+        line-height: 1.4;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .15s;
+        z-index: 50;
+        box-shadow: var(--shadow-md);
+    }
+    .help-icon::before {
+        content: '';
+        position: absolute;
+        bottom: calc(100% + 1px);
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #111827;
+        opacity: 0;
+        transition: opacity .15s;
+    }
+    .help-icon:hover::after, .help-icon:focus::after,
+    .help-icon:hover::before, .help-icon:focus::before { opacity: 1; }
+    body.dark .help-icon::after { background: #e5e7eb; color: #111827; }
+    body.dark .help-icon::before { border-top-color: #e5e7eb; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- =============== topbar =============== -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">Li</div>
+            <div class="brand-text">
+                <div class="title">Battery SOH Predictor</div>
+                <div class="sub">Multimodal · conformal · Phase-5 rigor</div>
+            </div>
+        </div>
+        <div class="topbar-actions">
+            <div id="api-status"><span class="status-pill"><span class="dot"></span>Connecting</span></div>
+            <button id="btn-about"  class="btn btn-ghost btn-sm" title="Project info"><i class="fas fa-circle-info"></i><span>About</span></button>
+            <button id="btn-tour"   class="btn btn-ghost btn-icon" title="Guided tour"><i class="fas fa-route"></i></button>
+            <button id="btn-theme"  class="btn btn-ghost btn-icon" title="Toggle theme"><i class="fas fa-moon"></i></button>
+        </div>
+    </div>
+
+    <!-- =============== tabs =============== -->
+    <div class="tabs" id="tabs-bar">
+        <button class="tab-btn active" data-tab="overview"><i class="fas fa-th-large"></i>Overview</button>
+        <button class="tab-btn" data-tab="predict"><i class="fas fa-wave-square"></i>Predict</button>
+        <button class="tab-btn" data-tab="timeline"><i class="fas fa-timeline"></i>Timeline</button>
+        <button class="tab-btn" data-tab="simulator"><i class="fas fa-chart-line"></i>What-If</button>
+        <button class="tab-btn" data-tab="phase5"><i class="fas fa-microscope"></i>Rigor<span class="badge">Phase 5</span></button>
+        <button class="tab-btn" data-tab="phase4"><i class="fas fa-flask"></i>Advanced</button>
+        <button class="tab-btn" data-tab="chat"><i class="fas fa-comments"></i>Doctor</button>
+        <button class="tab-btn" data-tab="fleet"><i class="fas fa-layer-group"></i>Fleet</button>
+        <button class="tab-btn" data-tab="transfer"><i class="fas fa-arrows-left-right-to-line"></i>Generalize</button>
+    </div>
+
+    <!-- =============== OVERVIEW =============== -->
+    <div id="tab-overview" class="tab-panel active">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Project overview</h2>
+                    <p class="subtitle">Physics-guided multimodal SOH estimator with a conformal / Weibull / retrieval-augmented prognostic layer and a reproducible Phase-5 rigor suite.</p>
+                </div>
+            </div>
+
+            <div class="section-title">Headline metrics</div>
+            <div class="stat-grid" id="hero-tiles">
+                <div class="stat">
+                    <span class="label">Production R&sup2;</span>
+                    <span class="value" id="hero-r2">—</span>
+                    <span class="note">Ridge · 19 features · held-out 336 cycles</span>
+                </div>
+                <div class="stat success">
+                    <span class="label">Test MAE</span>
+                    <span class="value" id="hero-mae">—</span>
+                    <span class="note">lower is better</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Cycles in corpus</span>
+                    <span class="value" id="hero-cycles">—</span>
+                    <span class="note">NASA PCoE + Mendeley forklift</span>
+                </div>
+                <div class="stat warning">
+                    <span class="label">Last rigor run</span>
+                    <span class="value" id="hero-co2">—</span>
+                    <span class="note">codecarbon · Indian grid</span>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="section-title">Start here</div>
+            <div class="grid-3">
+                <button class="card" style="padding:18px; border-color:var(--primary); cursor:pointer; text-align:left;" onclick="switchTab('predict')">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;"><i class="fas fa-wave-square" style="color:var(--primary)"></i><strong>Make a prediction</strong></div>
+                    <div class="text-xs text-muted">Slider form, real-cycle presets, CSV upload, PDF report.</div>
+                </button>
+                <button class="card" style="padding:18px; cursor:pointer; text-align:left;" onclick="switchTab('phase5')">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;"><i class="fas fa-microscope" style="color:var(--accent)"></i><strong>Rigor dashboard</strong></div>
+                    <div class="text-xs text-muted">Leakage probe, calibration, failure modes. Live from <span class="mono">make rigor</span>.</div>
+                </button>
+                <button class="card" style="padding:18px; cursor:pointer; text-align:left;" onclick="switchTab('timeline')">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;"><i class="fas fa-timeline" style="color:var(--success)"></i><strong>Degradation timeline</strong></div>
+                    <div class="text-xs text-muted">Scrub through real NASA B0005/6/7 cycles.</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============== PREDICT =============== -->
+    <div id="tab-predict" class="tab-panel">
+        <div class="grid-2">
+            <!-- input card -->
+            <div class="card" id="predict-input-card">
+                <div class="card-header">
+                    <div class="title-group">
+                        <h2>Battery inputs</h2>
+                        <p class="subtitle">Ranges match the NASA B0005–B0007 training set. Use a preset for a validated trajectory.</p>
+                    </div>
+                </div>
+
+                <form id="predict-form" class="stack">
+                    <div class="field">
+                        <label class="field-label"><span>Capacity</span><span class="field-hint">rated 1850 mAh</span></label>
+                        <div class="field-row">
+                            <input type="range" name="capacity_mah" min="500" max="2100" step="10" value="1780" oninput="this.nextElementSibling.textContent=this.value+' mAh'">
+                            <span class="range-val">1780 mAh</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label"><span>Cycles used</span><span class="field-hint">training range 0–170</span></label>
+                        <div class="field-row">
+                            <input type="range" name="cycle_number" min="0" max="250" step="1" value="37" oninput="this.nextElementSibling.textContent=this.value">
+                            <span class="range-val">37</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label"><span>Voltage range</span><span class="field-hint">min 2.0–2.7 V, max 4.0–4.25 V</span></label>
+                        <div class="grid-2" style="gap:10px">
+                            <div><label class="text-xs text-muted">Min (V)</label><input type="number" step="0.01" min="1.80" max="3.00" name="voltage_min" value="2.71"></div>
+                            <div><label class="text-xs text-muted">Max (V)</label><input type="number" step="0.01" min="3.50" max="4.30" name="voltage_max" value="4.20"></div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label"><span>Avg temperature</span><span class="field-hint">training ~30–34 °C</span></label>
+                        <div class="field-row">
+                            <input type="range" name="temp_mean" min="20" max="45" step="0.1" value="32" oninput="this.nextElementSibling.textContent=this.value+' °C'">
+                            <span class="range-val">32 °C</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label"><span>Discharge duration</span><span class="field-hint">training ~0.8–1.0 h</span></label>
+                        <div class="field-row">
+                            <input type="range" name="discharge_hours" min="0.3" max="2.0" step="0.05" value="0.93" oninput="this.nextElementSibling.textContent=this.value+' h'">
+                            <span class="range-val">0.93 h</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="field-label"><span>Charges per day</span><span class="field-hint">usage assumption</span></label>
+                        <div class="field-row">
+                            <input type="range" name="charges_per_day" min="0.1" max="5" step="0.1" value="1" oninput="this.nextElementSibling.textContent=this.value+'×'">
+                            <span class="range-val">1×</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="predict-btn" class="btn btn-primary btn-block"><i class="fas fa-wave-square"></i>Predict SOH &amp; Remaining Life</button>
+                </form>
+
+                <hr class="divider">
+
+                <div class="section-title">Real-cycle presets</div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button type="button" onclick="loadPreset('new')"      class="btn btn-subtle btn-sm">Brand new · 100%</button>
+                    <button type="button" onclick="loadPreset('good')"     class="btn btn-subtle btn-sm">Good · 95%</button>
+                    <button type="button" onclick="loadPreset('moderate')" class="btn btn-subtle btn-sm">Moderate · 85%</button>
+                    <button type="button" onclick="loadPreset('degraded')" class="btn btn-subtle btn-sm">Degrading · 75%</button>
+                    <button type="button" onclick="loadPreset('critical')" class="btn btn-subtle btn-sm">Critical · 65%</button>
+                </div>
+
+                <div class="section-title">Batch from CSV</div>
+                <div id="csv-dz" class="dz">
+                    <span class="icon"><i class="fas fa-file-csv"></i></span>
+                    <div class="text-sm">Drop a CSV here or <label for="csv-file" style="color:var(--primary); text-decoration:underline; cursor:pointer;">browse</label></div>
+                    <div class="text-xs text-soft" style="margin-top:4px;">Columns: capacity, cycle_number, voltage_min, voltage_max, temp_mean, discharge_time</div>
+                    <input type="file" id="csv-file" accept=".csv" style="display:none">
+                </div>
+                <div id="csv-result" class="hidden" style="margin-top:12px;">
+                    <div class="panel">
+                        <div class="panel-header"><h3><i class="fas fa-check-circle" style="color:var(--success)"></i>Batch results</h3></div>
+                        <div id="csv-summary" class="text-sm text-muted mb-2"></div>
+                        <div style="height:140px"><canvas id="csv-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- results card -->
+            <div class="card" id="predict-result-card">
+                <div class="card-header">
+                    <div class="title-group">
+                        <h2>Results</h2>
+                        <p class="subtitle">Prediction, explanation, and supporting diagnostics.</p>
+                    </div>
+                </div>
+
+                <div class="gauge-wrap">
+                    <div class="gauge" id="soh-meter" style="--soh:0; --mc:var(--border-strong)">
+                        <div class="gauge-value">
+                            <div class="num" id="soh-display">—</div>
+                            <div class="lbl">State of Health</div>
+                        </div>
+                    </div>
+                    <div id="status-badge"><span class="status-chip">awaiting input</span></div>
+                </div>
+
+                <hr class="divider">
+
+                <div id="badge-box" class="hidden stack">
+                    <div class="section-title">Shareable badge</div>
+                    <div class="flex items-center gap-3">
+                        <img id="badge-img" src="" alt="SOH badge" style="border-radius:6px;box-shadow:var(--shadow-sm)">
+                        <a id="badge-link" href="" download class="btn btn-subtle btn-sm"><i class="fas fa-download"></i>Save SVG</a>
+                    </div>
+                </div>
+
+                <div id="unc-box" class="hidden">
+                    <div class="panel">
+                        <h3><i class="fas fa-chart-area" style="color:var(--primary)"></i>Confidence band</h3>
+                        <div id="unc-text" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <div id="risk-box" class="hidden">
+                    <div class="panel" id="risk-card">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-shield-halved"></i>Risk assessment</h3>
+                            <span id="risk-badge" class="status-chip"></span>
+                        </div>
+                        <div id="risk-bars" style="margin-bottom:6px;"></div>
+                        <ul class="ticks" id="risk-factors"></ul>
+                    </div>
+                </div>
+
+                <div id="rul-box" class="hidden">
+                    <div class="panel">
+                        <h3><i class="fas fa-calendar-days" style="color:var(--primary)"></i>Remaining life</h3>
+                        <div class="grid-2" style="gap:10px; margin-top:8px;">
+                            <div class="stat" style="padding:10px"><span class="label">Days</span><span class="value" id="rul-days">—</span></div>
+                            <div class="stat" style="padding:10px"><span class="label">Cycles</span><span class="value" id="rul-cycles">—</span></div>
+                        </div>
+                        <p class="text-xs text-muted" id="rul-note" style="margin-top:6px;"></p>
+                    </div>
+                </div>
+
+                <div id="shap-box" class="hidden">
+                    <div class="panel">
+                        <h3><i class="fas fa-diagram-project"></i>Feature attribution (SHAP)</h3>
+                        <p class="text-xs text-muted" style="margin:0 0 8px;">Red bars push SOH up; blue bars push it down.</p>
+                        <div id="shap-chart"></div>
+                    </div>
+                </div>
+
+                <div id="disp-box" class="hidden">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3><i class="fas fa-recycle" style="color:var(--success)"></i><span id="disp-label"></span></h3>
+                            <span class="status-chip" style="background:var(--primary-soft); color:var(--primary)"><i class="fas fa-robot"></i>AI</span>
+                        </div>
+                        <p id="disp-summary" class="text-xs text-muted" style="margin:0 0 10px;"></p>
+                        <div id="disp-content" class="text-xs stack"></div>
+                    </div>
+                </div>
+
+                <div id="recs-box" class="hidden">
+                    <div class="panel">
+                        <h3><i class="fas fa-list-check"></i>Recommendations</h3>
+                        <ul class="ticks" id="recs-list"></ul>
+                    </div>
+                </div>
+
+                <div id="actions-box" class="hidden flex flex-wrap gap-2" style="margin-top:14px;">
+                    <button onclick="downloadPDF()" id="pdf-btn" class="btn btn-subtle btn-sm"><i class="fas fa-file-pdf"></i>PDF report</button>
+                    <button onclick="toggleJSON()"  class="btn btn-subtle btn-sm"><i class="fas fa-code"></i>Raw JSON</button>
+                    <span id="proc-time" class="status-chip"></span>
+                </div>
+
+                <div id="json-box" class="hidden" style="margin-top:12px;">
+                    <div class="section-title">API response</div>
+                    <pre id="json-pre" class="json-pre"></pre>
+                </div>
+
+                <div id="ica-box" class="hidden" style="margin-top:12px;">
+                    <div class="section-title">Reconstructed dQ/dV (incremental capacity)</div>
+                    <div id="ica-plot" style="height:240px"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============== TIMELINE =============== -->
+    <div id="tab-timeline" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Degradation timeline</h2>
+                    <p class="subtitle">Scrub through a real NASA cell. Data pulled directly from the harmonised CSV.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+                <label class="text-xs text-muted">Battery</label>
+                <select id="tl-battery"></select>
+                <button onclick="playTimeline()" id="tl-play" class="btn btn-primary btn-sm"><i class="fas fa-play"></i>Animate</button>
+                <button onclick="stopTimeline()" class="btn btn-subtle btn-sm"><i class="fas fa-stop"></i>Stop</button>
+            </div>
+
+            <div class="grid-3">
+                <div class="gauge-wrap" style="grid-column:span 1;">
+                    <div class="gauge" id="tl-meter" style="--soh:0; --mc:var(--success)"><div class="gauge-value"><div class="num" id="tl-soh">—</div><div class="lbl">current SOH</div></div></div>
+                    <div class="text-sm" id="tl-cycle-label">Cycle 0</div>
+                    <div class="text-xs text-muted" id="tl-extra"></div>
+                </div>
+                <div style="grid-column: span 2;">
+                    <div style="height:260px"><canvas id="tl-chart"></canvas></div>
+                    <div class="field-row" style="margin-top:10px;">
+                        <input type="range" id="tl-slider" min="0" max="0" value="0">
+                        <span class="range-val" id="tl-slider-val">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============== SIMULATOR =============== -->
+    <div id="tab-simulator" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>What-if digital twin</h2>
+                    <p class="subtitle">Compare three usage patterns over a chosen horizon. Batch or live-streamed.</p>
+                </div>
+            </div>
+
+            <div class="grid-3 mb-4">
+                <div class="field">
+                    <div class="section-title" style="color:var(--primary)">Scenario 1 · Normal</div>
+                    <label class="text-xs text-muted">Charges per day</label>
+                    <input type="number" id="sim-cpd1" value="1" step="0.5" min="0.1" max="5">
+                    <label class="text-xs text-muted" style="margin-top:4px;">Temperature (°C)</label>
+                    <input type="number" id="sim-temp1" value="25" step="1">
+                </div>
+                <div class="field">
+                    <div class="section-title" style="color:var(--warning)">Scenario 2 · Heavy use</div>
+                    <label class="text-xs text-muted">Charges per day</label>
+                    <input type="number" id="sim-cpd2" value="3" step="0.5" min="0.1" max="5">
+                    <label class="text-xs text-muted" style="margin-top:4px;">Temperature (°C)</label>
+                    <input type="number" id="sim-temp2" value="35" step="1">
+                </div>
+                <div class="field">
+                    <div class="section-title" style="color:var(--danger)">Scenario 3 · Extreme</div>
+                    <label class="text-xs text-muted">Charges per day</label>
+                    <input type="number" id="sim-cpd3" value="5" step="0.5" min="0.1" max="5">
+                    <label class="text-xs text-muted" style="margin-top:4px;">Temperature (°C)</label>
+                    <input type="number" id="sim-temp3" value="45" step="1">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <label class="text-xs text-muted">Horizon</label>
+                <select id="sim-horizon">
+                    <option value="90">3 months</option>
+                    <option value="180">6 months</option>
+                    <option value="365" selected>1 year</option>
+                    <option value="730">2 years</option>
+                </select>
+                <button onclick="runSimulation()"    class="btn btn-primary btn-sm"><i class="fas fa-play"></i>Run batch</button>
+                <button onclick="runSimulationSSE()" class="btn btn-accent btn-sm"  title="Server-sent events"><i class="fas fa-bolt"></i>Live stream</button>
+            </div>
+
+            <div style="height:360px"><canvas id="sim-chart"></canvas></div>
+            <div id="sim-summary" class="grid-3 hidden" style="margin-top:14px;"></div>
+        </div>
+    </div>
+
+    <!-- =============== PHASE 5 DASHBOARD =============== -->
+    <div id="tab-phase5" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Phase 5 rigor suite</h2>
+                    <p class="subtitle">Eight modules that probe leakage, calibration, covariate shift, survival calibration, causal attribution, counterfactuals, failure modes, and compute CO<sub>2</sub>.</p>
+                </div>
+                <a href="/api/phase5/manifest" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-up-right-from-square"></i>Raw manifest</a>
+            </div>
+
+            <div id="p5-loading" class="text-sm text-muted" style="text-align:center; padding:32px;"><i class="fas fa-spinner fa-spin"></i> Loading manifest…</div>
+
+            <div id="p5-content" class="hidden">
+                <div class="section-title">Top-line findings</div>
+                <div class="stat-grid mb-4">
+                    <div class="stat danger"><span class="label">Source-classifier AUC</span><span class="value" id="p5-leakage">—</span><span class="note">NASA vs Mendeley</span></div>
+                    <div class="stat danger"><span class="label">Bootstrap PICP @ 90</span><span class="value" id="p5-picp">—</span><span class="note">target 0.90</span></div>
+                    <div class="stat warning"><span class="label">Calibration ECE</span><span class="value" id="p5-ece">—</span><span class="note">0 = perfect</span></div>
+                    <div class="stat success"><span class="label">Test MAE</span><span class="value" id="p5-mae">—</span><span class="note">production Ridge</span></div>
+                </div>
+
+                <div class="section-title">Reliability diagram</div>
+                <div class="panel mb-4">
+                    <img src="/api/phase5/figure/reliability_diagram" alt="reliability diagram" style="width:100%; border-radius:6px;">
+                    <p class="text-xs text-muted" style="margin:8px 0 0;">A perfectly-calibrated model traces the diagonal.</p>
+                </div>
+
+                <div class="section-title" style="margin-top:20px;">Phase 6 — deferred suite</div>
+                <p class="text-xs text-muted" style="margin:-6px 0 10px;">Seven follow-up modules (RAP benchmark, LLM feature discovery, PINN sweep, LOBO CV, TENT, curriculum, SSL). Run <code class="mono">make deferred</code> to (re)generate.</p>
+                <div id="p6-loading" class="text-sm text-muted" style="text-align:center; padding:16px;"><i class="fas fa-spinner fa-spin"></i> Loading Phase 6 manifest…</div>
+                <div id="p6-content" class="hidden">
+                    <div class="grid-2" id="p6-modules"></div>
+                    <p class="text-xs text-muted" style="margin-top:10px;">Full discussion: see <a href="/docs/phase6-report" target="_blank" style="color:var(--accent);">PHASE6_DEFERRED_REPORT.md</a> in the repo root, or <a href="/api/phase6/manifest" target="_blank" style="color:var(--accent);">raw manifest JSON</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============== PHASE 4 ADVANCED =============== -->
+    <div id="tab-phase4" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Advanced analytics</h2>
+                    <p class="subtitle">Three diagnostics that a regular SOH prediction can't answer. Uses the values from the Predict tab.</p>
+                </div>
+            </div>
+
+            <div id="phase4-info-banner" class="panel text-xs text-muted mb-4">Loading status…</div>
+
+            <div class="grid-3">
+                <div class="panel">
+                    <h3><i class="fas fa-bullseye" style="color:var(--accent)"></i>Uncertainty range</h3>
+                    <p class="text-xs text-muted" style="margin:6px 0;">Provable-coverage interval via split-conformal prediction.</p>
+                    <label class="text-xs text-muted">Confidence</label>
+                    <select id="conf-pct" style="width:100%; margin-bottom:8px;"><option value="90">90%</option><option value="95">95%</option></select>
+                    <button onclick="runConformal()" class="btn btn-accent btn-block btn-sm">Show range</button>
+                    <div id="conf-result" class="hidden stack" style="margin-top:12px;">
+                        <div class="text-xs text-muted" style="text-align:center;">Estimated SOH</div>
+                        <div style="text-align:center;"><span id="conf-soh" class="value mono" style="font-size:1.6rem; font-weight:700;"></span></div>
+                        <div class="text-xs text-muted" style="text-align:center;" id="conf-conf-label"></div>
+                        <div style="text-align:center;"><span id="conf-band" class="mono" style="color:var(--accent); font-weight:600;"></span></div>
+                        <div class="text-xs text-muted" id="conf-meta" style="border-top:1px solid var(--border); padding-top:8px;"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-hourglass-half" style="color:var(--warning)"></i>Remaining life</h3>
+                    <p class="text-xs text-muted" style="margin:6px 0;">Weibull survival model with pessimistic / most-likely / optimistic cycles.</p>
+                    <button onclick="runRUL()" class="btn btn-subtle btn-block btn-sm" style="background:var(--warning-soft); color:var(--warning)">Estimate</button>
+                    <div id="rul-result" class="hidden stack" style="margin-top:12px;">
+                        <div class="grid-3">
+                            <div class="stat warning" style="padding:8px; text-align:center;"><span class="label">Pessimistic</span><span class="value mono" id="rul-p10">—</span><span class="note">cycles</span></div>
+                            <div class="stat warning" style="padding:8px; text-align:center;"><span class="label">Most likely</span><span class="value mono" id="rul-med">—</span><span class="note">cycles</span></div>
+                            <div class="stat warning" style="padding:8px; text-align:center;"><span class="label">Optimistic</span><span class="value mono" id="rul-p90">—</span><span class="note">cycles</span></div>
+                        </div>
+                        <div style="position:relative; height:6px; background:var(--border); border-radius:999px;">
+                            <div style="position:absolute; height:100%; background:var(--warning); border-radius:999px;" id="rul-bar-band"></div>
+                            <div style="position:absolute; height:100%; width:2px; background:#78350f;" id="rul-bar-median"></div>
+                        </div>
+                        <div class="text-xs text-muted" id="rul-days-line" style="text-align:center;"></div>
+                        <div class="text-xs text-muted" id="rul-meta" style="border-top:1px solid var(--border); padding-top:8px;"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-magnifying-glass" style="color:var(--success)"></i>AI diagnosis</h3>
+                    <p class="text-xs text-muted" style="margin:6px 0;">K-nearest cycles from training + LLM explanation (template fallback if no key).</p>
+                    <div class="flex gap-2 items-center mb-2">
+                        <label class="text-xs text-muted">K</label>
+                        <input type="number" id="rap-k" min="1" max="10" value="5" style="width:64px;">
+                        <label class="text-xs text-muted flex items-center gap-2"><input type="checkbox" id="rap-llm" checked>Use AI</label>
+                    </div>
+                    <button onclick="runRAP()" class="btn btn-subtle btn-block btn-sm" style="background:var(--success-soft); color:var(--success)">Generate</button>
+                    <div id="rap-result" class="hidden stack" style="margin-top:12px;">
+                        <div class="section-title">Diagnosis</div>
+                        <div class="text-sm" id="rap-text"></div>
+                        <div class="section-title">Look-alikes</div>
+                        <ul class="ticks" id="rap-hits"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-top:14px;">
+                <h3><i class="fas fa-atom" style="color:var(--primary)"></i>Physics-aware training rules (PINN)</h3>
+                <ul class="ticks" style="margin:8px 0;">
+                    <li>Batteries don't get healthier — penalise rising SOH on later cycles of the same cell.</li>
+                    <li>Hotter cycles age faster (Arrhenius coupling).</li>
+                    <li>Capacity loss and internal-resistance rise are correlated.</li>
+                </ul>
+                <p class="text-xs text-muted" id="pinn-summary"></p>
+                <p class="text-xs text-soft" id="pinn-weights"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============== CHAT =============== -->
+    <div id="tab-chat" class="tab-panel">
+        <div class="card" style="max-width:720px; margin:0 auto;">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Battery Doctor</h2>
+                    <p class="subtitle">Ask natural-language questions; uses your last prediction as context.</p>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="stack" style="max-height:380px; overflow-y:auto; padding:4px; min-height:220px;">
+                <div class="chat-msg chat-bot">Hi. Ask me anything about your battery's health, safety, charging, or replacement timing.</div>
+            </div>
+
+            <div class="flex flex-wrap gap-2" style="margin:12px 0;">
+                <button onclick="sendChat('Is my battery safe to use?')"       class="btn btn-subtle btn-sm">Is it safe?</button>
+                <button onclick="sendChat('How can I extend my battery life?')" class="btn btn-subtle btn-sm">Extend life?</button>
+                <button onclick="sendChat('When should I replace my battery?')" class="btn btn-subtle btn-sm">When to replace?</button>
+                <button onclick="sendChat('Can I take this on a plane?')"      class="btn btn-subtle btn-sm">Travel safe?</button>
+            </div>
+
+            <form id="chat-form" class="flex gap-2">
+                <input type="text" id="chat-input" placeholder="Ask about your battery…" style="flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; background:var(--surface-alt); color:var(--text);">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- =============== FLEET =============== -->
+    <div id="tab-fleet" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Fleet manager</h2>
+                    <p class="subtitle">Track multiple batteries. Stored locally in your browser.</p>
+                </div>
+                <button onclick="addCurrentToFleet()" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i>Add current</button>
+            </div>
+
+            <div id="fleet-empty" class="text-sm text-muted" style="text-align:center; padding:40px 20px;">
+                <i class="fas fa-battery-empty" style="font-size:24px; display:block; margin-bottom:6px; color:var(--text-soft)"></i>
+                No batteries tracked yet.
+            </div>
+
+            <div id="fleet-table" class="hidden">
+                <table class="data">
+                    <thead><tr><th>ID</th><th>SOH</th><th>Risk</th><th>Days</th><th>Capacity</th><th>Cycles</th><th>Added</th><th></th></tr></thead>
+                    <tbody id="fleet-body"></tbody>
+                </table>
+                <div id="fleet-priority" class="panel hidden" style="margin-top:12px; background:var(--danger-soft); border-color:transparent;">
+                    <h3><i class="fas fa-triangle-exclamation" style="color:var(--danger)"></i>Priority replacements</h3>
+                    <p class="text-xs" id="fleet-priority-text" style="color:var(--danger); margin:4px 0 0;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============== TRANSFER =============== -->
+    <div id="tab-transfer" class="tab-panel">
+        <div class="card">
+            <div class="card-header">
+                <div class="title-group">
+                    <h2>Cross-battery generalisation</h2>
+                    <p class="subtitle">Trained on one battery, tested zero-shot on others.</p>
+                </div>
+            </div>
+            <div id="transfer-loading" class="text-sm text-muted" style="text-align:center; padding:32px;"><i class="fas fa-spinner fa-spin"></i> Loading metrics…</div>
+            <div id="transfer-content" class="hidden">
+                <div id="transfer-cards" class="stat-grid mb-4"></div>
+                <div style="height:320px"><canvas id="transfer-chart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site">
+        Battery SOH Predictor · v4 · FastAPI + multimodal cross-attention + Phase-5 rigor
+        &nbsp;·&nbsp;<a href="/docs">API docs</a>
+    </footer>
+</div>
+
+<!-- About modal -->
+<div id="about-modal" class="modal-bg">
+    <div class="modal-box">
+        <div class="card-header">
+            <div class="title-group"><h2>About this project</h2><p class="subtitle">Model card and runtime information.</p></div>
+            <button onclick="closeAbout()" class="btn btn-ghost btn-icon"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div id="about-content" class="text-sm">Loading…</div>
+    </div>
+</div>
+
+<div class="fab" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fas fa-arrow-up"></i></div>
+
+<script>
+const API = window.location.origin;
+let lastPrediction = null;
+let lastFeatures = null;
+let fleet = JSON.parse(localStorage.getItem('battery_fleet') || '[]');
+let simChart = null;
+let tlChart = null;
+let tlData = null;
+let tlInterval = null;
+let csvChart = null;
+
+// =============== TABS ===============
+function switchTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    const btn = document.querySelector(`.tab-btn[data-tab="${id}"]`); if (btn) btn.classList.add('active');
+    if (id === 'transfer') loadTransferData();
+    if (id === 'fleet') renderFleet();
+    if (id === 'phase5' && !p5Loaded) loadPhase5();
+    if (id === 'phase4' && !phase4Loaded) loadPhase4Info();
+    if (id === 'timeline' && !tlData) initTimeline();
+    if (id === 'overview') loadHero();
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+// =============== THEME ===============
+function applyTheme(t) {
+    document.body.classList.toggle('dark', t === 'dark');
+    document.getElementById('btn-theme').innerHTML = t === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+}
+document.getElementById('btn-theme').addEventListener('click', () => {
+    const cur = document.body.classList.contains('dark') ? 'dark' : 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('soh_theme', next); applyTheme(next);
+});
+applyTheme(localStorage.getItem('soh_theme') || 'light');
+
+// =============== RANGE GRADIENTS ===============
+function updateRangeGradient(input) {
+    const min = parseFloat(input.min) || 0, max = parseFloat(input.max) || 100;
+    const p = ((parseFloat(input.value) - min) / (max - min)) * 100;
+    input.style.setProperty('--p', p + '%');
+}
+document.querySelectorAll('input[type=range]').forEach(r => {
+    updateRangeGradient(r);
+    r.addEventListener('input', () => updateRangeGradient(r));
+});
+
+// =============== ABOUT MODAL ===============
+document.getElementById('btn-about').addEventListener('click', openAbout);
+async function openAbout() {
+    document.getElementById('about-modal').classList.add('show');
+    try {
+        const d = await fetch(API + '/api/about').then(r => r.json());
+        document.getElementById('about-content').innerHTML = `
+            <p class="text-muted" style="margin-bottom:14px;">${d.description}</p>
+            <div class="stat-grid" style="grid-template-columns: repeat(2,1fr);">
+                <div class="stat"><span class="label">Production model</span><span class="value" style="font-size:.95rem;">${d.model.production}</span><span class="note">${d.model.n_features_production} features</span></div>
+                <div class="stat"><span class="label">Cross-attention</span><span class="value" style="font-size:.95rem;">${d.model.cross_attention_loaded ? 'loaded' : '—'}</span></div>
+                <div class="stat"><span class="label">Bootstrap models</span><span class="value" style="font-size:.95rem;">${d.model.bootstrap_models}</span></div>
+                <div class="stat"><span class="label">LLM provider</span><span class="value" style="font-size:.95rem;">${d.model.llm_provider || '—'}</span></div>
+                <div class="stat success"><span class="label">Test MAE</span><span class="value" style="font-size:.95rem;">${d.metrics_headline.ridge_19feat_test_mae_pct}%</span></div>
+                <div class="stat success"><span class="label">Test R²</span><span class="value" style="font-size:.95rem;">${d.metrics_headline.ridge_19feat_test_r2}</span></div>
+                <div class="stat"><span class="label">NASA cycles</span><span class="value" style="font-size:.95rem;">${d.datasets.nasa_b0005_b0006_b0007_cycles}</span></div>
+                <div class="stat"><span class="label">Mendeley cycles</span><span class="value" style="font-size:.95rem;">${d.datasets.mendeley_cycles}</span></div>
+            </div>
+            <hr class="divider">
+            <div class="text-xs text-muted"><strong>Phase 5 modules:</strong> ${d.phase5_modules.join(' · ')}</div>
+            <div class="text-xs text-muted"><strong>Host:</strong> Python ${d.host.python} · ${d.host.cpu_count} cores</div>
+            <div class="flex gap-2" style="margin-top:14px;">
+                <a href="/docs" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-book"></i>API docs</a>
+                <a href="/health" target="_blank" class="btn btn-subtle btn-sm"><i class="fas fa-heartbeat"></i>Health</a>
+                <a href="/api/phase5/manifest" target="_blank" class="btn btn-subtle btn-sm"><i class="fas fa-microscope"></i>Rigor JSON</a>
+            </div>
+        `;
+    } catch (e) { document.getElementById('about-content').innerHTML = `<div class="panel" style="background:var(--danger-soft); color:var(--danger);">Failed to load: ${e.message}</div>`; }
+}
+function closeAbout() { document.getElementById('about-modal').classList.remove('show'); }
+document.getElementById('about-modal').addEventListener('click', e => { if (e.target.id === 'about-modal') closeAbout(); });
+
+// =============== HERO ===============
+let heroLoaded = false;
+async function loadHero() {
+    if (heroLoaded) return;
+    try {
+        const a = await fetch(API + '/api/about').then(r => r.json());
+        document.getElementById('hero-r2').textContent = a.metrics_headline.ridge_19feat_test_r2;
+        document.getElementById('hero-mae').textContent = a.metrics_headline.ridge_19feat_test_mae_pct + '%';
+        document.getElementById('hero-cycles').textContent = (a.datasets.nasa_b0005_b0006_b0007_cycles + a.datasets.mendeley_cycles).toLocaleString();
+        try {
+            const m = await fetch(API + '/api/phase5/manifest').then(r => r.json());
+            const co2 = m.manifest?.compute?.total_emissions_kg_co2;
+            document.getElementById('hero-co2').innerHTML = co2 ? (co2 * 1e6).toFixed(1) + ' <span style="font-size:.7em; color:var(--text-muted)">μg CO₂</span>' : '—';
+        } catch {}
+        heroLoaded = true;
+    } catch (e) {}
+}
+
+// =============== STATUS ===============
+async function checkAPI() {
+    const el = document.getElementById('api-status');
+    try {
+        const r = await fetch(API + '/health');
+        if (r.ok) { const d = await r.json(); el.innerHTML = `<span class="status-pill"><span class="dot"></span>Connected · ${d.features_available.length} features</span>`; }
+    } catch { el.innerHTML = `<span class="status-pill offline"><span class="dot"></span>Offline</span>`; }
+}
+
+// =============== PREDICT ===============
+document.getElementById('predict-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('predict-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Analysing'; btn.disabled = true;
+    const fd = new FormData(e.target); const raw = {}; fd.forEach((v, k) => raw[k] = parseFloat(v));
+    const f = {
+        capacity: raw.capacity_mah / 1000, cycle_number: Math.round(raw.cycle_number),
+        voltage_min: raw.voltage_min, voltage_max: raw.voltage_max,
+        temp_mean: raw.temp_mean, discharge_time: raw.discharge_hours * 3600,
+        charges_per_day: raw.charges_per_day,
+    };
+    lastFeatures = f;
+    try {
+        const r = await fetch(API + '/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ features: f, include_explanation: true }) });
+        if (r.ok) { const d = await r.json(); lastPrediction = d; displayResult(d); }
+        else { const er = await r.json(); alert(er.detail); }
+    } catch (err) { alert('Error: ' + err.message); }
+    btn.innerHTML = '<i class="fas fa-wave-square"></i>Predict SOH &amp; Remaining Life'; btn.disabled = false;
+});
+
+function displayResult(d) {
+    const soh = d.soh, m = document.getElementById('soh-meter'), disp = document.getElementById('soh-display');
+    let c, txt, chipClass;
+    if (soh >= 90) { c = 'var(--success)'; txt = 'Excellent'; chipClass = 'excellent'; }
+    else if (soh >= 80) { c = 'var(--primary)'; txt = 'Good'; chipClass = 'good'; }
+    else if (soh >= 70) { c = 'var(--warning)'; txt = 'Moderate'; chipClass = 'moderate'; }
+    else { c = 'var(--danger)'; txt = 'Poor'; chipClass = 'poor'; }
+    m.style.setProperty('--soh', Math.max(0, Math.min(100, soh)));
+    m.style.setProperty('--mc', c);
+    disp.textContent = soh.toFixed(1) + '%';
+    document.getElementById('status-badge').innerHTML = `<span class="status-chip ${chipClass}">${txt}</span>`;
+
+    // Badge
+    show('badge-box');
+    const sohInt = Math.round(soh);
+    document.getElementById('badge-img').src = API + '/api/badge/' + sohInt + '.svg';
+    const a = document.getElementById('badge-link');
+    a.href = API + '/api/badge/' + sohInt + '.svg';
+    a.download = `battery_soh_${sohInt}.svg`;
+
+    if (d.uncertainty) { const u = d.uncertainty; show('unc-box'); document.getElementById('unc-text').textContent = `${u.confidence_pct}% confidence — SOH is between ${u.soh_lower.toFixed(1)}% and ${u.soh_upper.toFixed(1)}%`; }
+
+    if (d.risk) {
+        const r = d.risk; show('risk-box');
+        const rb = document.getElementById('risk-badge');
+        rb.textContent = `${r.risk_level}  (${r.overall_risk}/100)`;
+        rb.className = 'status-chip ' + (r.overall_risk >= 75 ? 'poor' : r.overall_risk >= 50 ? 'moderate' : r.overall_risk >= 25 ? 'good' : 'excellent');
+        document.getElementById('risk-bars').innerHTML = [['Thermal', r.thermal_risk, 'var(--danger)'], ['Voltage', r.voltage_risk, 'var(--warning)'], ['Capacity', r.capacity_risk, 'var(--primary)'], ['Cycle', r.cycle_risk, 'var(--accent)']]
+            .map(([l, v, cl]) => `<div class="risk-bar-row"><div class="head"><span>${l}</span><span>${v}%</span></div><div class="risk-bar-track"><div class="risk-bar-fill" style="width:${v}%;background:${cl}"></div></div></div>`).join('');
+        document.getElementById('risk-factors').innerHTML = r.risk_factors.map(f => `<li>${f}</li>`).join('');
+    }
+
+    if (d.rul) {
+        show('rul-box'); const r = d.rul;
+        const de = document.getElementById('rul-days'); de.textContent = r.remaining_days;
+        document.getElementById('rul-cycles').textContent = r.remaining_cycles;
+        document.getElementById('rul-note').textContent = r.confidence_note || '';
+    }
+
+    if (d.shap_explanation) {
+        show('shap-box'); const s = d.shap_explanation, mx = Math.max(...s.features.map(f => Math.abs(f.shap_value)), 0.001);
+        document.getElementById('shap-chart').innerHTML = s.features.map(f => {
+            const p = (Math.abs(f.shap_value) / mx) * 45, cl = f.shap_value >= 0 ? 'pos' : 'neg', sg = f.shap_value >= 0 ? '+' : '';
+            return `<div class="shap-row"><div class="shap-label">${f.label}</div><div class="shap-track"><div class="shap-mid"></div><div class="shap-fill ${cl}" style="width:${p}%"></div></div><div class="shap-val">${sg}${f.shap_value.toFixed(2)}</div></div>`;
+        }).join('');
+    }
+
+    if (d.disposal_guidance) {
+        const g = d.disposal_guidance; show('disp-box');
+        document.getElementById('disp-label').textContent = g.label;
+        document.getElementById('disp-summary').textContent = g.summary;
+        document.getElementById('disp-content').innerHTML = [['Disposal', g.disposal_methods], ['Precautions', g.analysis_precautions], ['Transport', g.transport_storage_precautions]].map(([t, items]) => `<div><div class="section-title">${t}</div><ul class="ticks">${(items || []).map(i => '<li>' + i + '</li>').join('')}</ul></div>`).join('');
+    }
+
+    if (d.recommendations && d.recommendations.length) {
+        show('recs-box');
+        document.getElementById('recs-list').innerHTML = d.recommendations.map(r => `<li>${r}</li>`).join('');
+    }
+
+    show('actions-box');
+    document.getElementById('proc-time').textContent = d.processing_time_ms.toFixed(0) + ' ms';
+    document.getElementById('json-pre').innerHTML = highlightJSON(JSON.stringify(d, null, 2));
+    drawICA(lastFeatures.cycle_number);
+}
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+
+async function downloadPDF() { if (lastPrediction) window.open(API + '/report/pdf/' + lastPrediction.prediction_id, '_blank'); }
+
+function toggleJSON() { document.getElementById('json-box').classList.toggle('hidden'); }
+function highlightJSON(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+            let cls = 'n';
+            if (/^"/.test(match)) cls = /:$/.test(match) ? 'k' : 's';
+            else if (/true|false/.test(match) || /null/.test(match)) cls = 'b';
+            return `<span class="${cls}">${match}</span>`;
+        });
+}
+
+// =============== ICA ===============
+async function drawICA(cycle) {
+    try {
+        const r = await fetch(`${API}/api/ica/B0005/${Math.min(167, Math.max(0, cycle))}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        show('ica-box');
+        const dark = document.body.classList.contains('dark');
+        Plotly.newPlot('ica-plot', [{ x: d.voltage, y: d.dqdv, mode: 'lines', line: { color: '#7c3aed', width: 2 }, fill: 'tozeroy', fillcolor: 'rgba(124,58,237,0.12)' }], {
+            margin: { l: 42, r: 10, t: 8, b: 36 }, xaxis: { title: 'Voltage (V)', gridcolor: dark ? '#1f2937' : '#e5e7eb', color: dark ? '#9ca3af' : '#6b7280' },
+            yaxis: { title: 'dQ/dV', gridcolor: dark ? '#1f2937' : '#e5e7eb', color: dark ? '#9ca3af' : '#6b7280' },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { family: 'Inter', size: 11 },
+            shapes: [{ type: 'line', x0: d.peak_voltage, x1: d.peak_voltage, y0: 0, y1: d.peak_magnitude, line: { color: '#ef4444', dash: 'dash' } }],
+            annotations: [{ x: d.peak_voltage, y: d.peak_magnitude, text: `peak ${d.peak_voltage.toFixed(2)} V`, showarrow: true, arrowhead: 0, font: { size: 10 } }],
+        }, { responsive: true, displayModeBar: false });
+    } catch {}
+}
+
+// =============== CSV ===============
+const dz = document.getElementById('csv-dz'), fileInput = document.getElementById('csv-file');
+['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop', e => { if (e.dataTransfer.files.length) handleCSV(e.dataTransfer.files[0]); });
+dz.addEventListener('click', e => { if (e.target.tagName !== 'LABEL' && e.target.tagName !== 'INPUT') fileInput.click(); });
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleCSV(e.target.files[0]); });
+async function handleCSV(file) {
+    const text = await file.text();
+    try {
+        const r = await fetch(API + '/predict/csv', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ csv_text: text }) });
+        if (!r.ok) { const er = await r.json(); alert('CSV error: ' + er.detail); return; }
+        const d = await r.json();
+        document.getElementById('csv-result').classList.remove('hidden');
+        document.getElementById('csv-summary').innerHTML = `<strong>${d.summary.n}</strong> rows · SOH ${d.summary.soh_min.toFixed(1)}%–${d.summary.soh_max.toFixed(1)}% (mean ${d.summary.soh_mean.toFixed(1)}%)`;
+        const ctx = document.getElementById('csv-chart').getContext('2d');
+        if (csvChart) csvChart.destroy();
+        csvChart = new Chart(ctx, {
+            type: 'line', data: { labels: d.rows.map((_, i) => i + 1), datasets: [{ label: 'SOH (%)', data: d.rows.map(r => r.soh), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.1)', tension: 0.25, pointRadius: 1 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    } catch (e) { alert('CSV upload failed: ' + e.message); }
+}
+
+// =============== TIMELINE ===============
+async function initTimeline() {
+    try {
+        const list = await fetch(API + '/api/dataset/list').then(r => r.json());
+        const sel = document.getElementById('tl-battery');
+        sel.innerHTML = list.batteries.map(b => `<option value="${b.battery_id}">${b.battery_id} · ${b.n_cycles} cycles · ${b.soh_initial.toFixed(0)} → ${b.soh_final.toFixed(0)}%</option>`).join('');
+        sel.addEventListener('change', loadTimelineData);
+        await loadTimelineData();
+    } catch (e) { console.warn('Timeline init failed', e); }
+}
+async function loadTimelineData() {
+    const bid = document.getElementById('tl-battery').value;
+    const d = await fetch(API + `/api/dataset/trajectory?battery=${bid}`).then(r => r.json());
+    tlData = d;
+    const slider = document.getElementById('tl-slider');
+    slider.max = d.rows.length - 1; slider.value = 0;
+    updateRangeGradient(slider);
+    document.getElementById('tl-slider-val').textContent = '0';
+    slider.addEventListener('input', () => { updateRangeGradient(slider); updateTimelineFrame(parseInt(slider.value)); });
+    const ctx = document.getElementById('tl-chart').getContext('2d');
+    if (tlChart) tlChart.destroy();
+    tlChart = new Chart(ctx, {
+        type: 'line', data: {
+            labels: d.rows.map(r => r.cycle),
+            datasets: [
+                { label: 'SOH (%)', data: d.rows.map(r => r.soh), borderColor: '#059669', backgroundColor: 'rgba(5,150,105,.1)', tension: 0.2, pointRadius: 0, borderWidth: 2 },
+                { label: 'Cursor', data: [], borderColor: '#dc2626', borderWidth: 2, pointRadius: 5, pointBackgroundColor: '#dc2626', showLine: false },
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }, scales: { y: { min: 50, max: 105, title: { display: true, text: 'SOH (%)' } }, x: { title: { display: true, text: 'Cycle' } } } }
+    });
+    updateTimelineFrame(0);
+}
+function updateTimelineFrame(i) {
+    if (!tlData) return; const row = tlData.rows[i];
+    document.getElementById('tl-slider').value = i;
+    document.getElementById('tl-slider-val').textContent = i;
+    document.getElementById('tl-cycle-label').textContent = `Cycle ${row.cycle}`;
+    document.getElementById('tl-extra').innerHTML = `${row.capacity.toFixed(2)} Ah · ${row.temp_mean.toFixed(1)} °C`;
+    const m = document.getElementById('tl-meter');
+    let c; if (row.soh >= 90) c = 'var(--success)'; else if (row.soh >= 80) c = 'var(--primary)'; else if (row.soh >= 70) c = 'var(--warning)'; else c = 'var(--danger)';
+    m.style.setProperty('--soh', Math.max(0, Math.min(100, row.soh))); m.style.setProperty('--mc', c);
+    document.getElementById('tl-soh').textContent = row.soh.toFixed(1) + '%';
+    if (tlChart) { tlChart.data.datasets[1].data = [{ x: row.cycle, y: row.soh }]; tlChart.update('none'); }
+}
+function playTimeline() {
+    if (!tlData || tlInterval) return;
+    let i = parseInt(document.getElementById('tl-slider').value);
+    tlInterval = setInterval(() => { i++; if (i >= tlData.rows.length) { stopTimeline(); return; } updateTimelineFrame(i); }, 80);
+}
+function stopTimeline() { if (tlInterval) { clearInterval(tlInterval); tlInterval = null; } }
+
+// =============== SIMULATOR ===============
+async function runSimulation() {
+    const f = getFormFeatures();
+    const scenarios = [1, 2, 3].map(i => ({
+        charges_per_day: parseFloat(document.getElementById('sim-cpd' + i).value),
+        temp_mean: parseFloat(document.getElementById('sim-temp' + i).value),
+        label: `${document.getElementById('sim-cpd' + i).value}×/day @ ${document.getElementById('sim-temp' + i).value}°C`
+    }));
+    try {
+        const r = await fetch(API + '/simulate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base_features: f, scenarios, horizon_days: parseInt(document.getElementById('sim-horizon').value) }) });
+        if (r.ok) { const d = await r.json(); renderSimChart(d); }
+    } catch (e) { alert('Simulation error: ' + e.message); }
+}
+function renderSimChart(data) {
+    const ctx = document.getElementById('sim-chart').getContext('2d');
+    if (simChart) simChart.destroy();
+    const colors = ['#2563eb', '#d97706', '#dc2626'];
+    const datasets = data.scenarios.map((sc, i) => ({
+        label: sc.label + (sc.eol_day ? `  (EOL day ${sc.eol_day})` : ''),
+        data: sc.trajectory.map(p => ({ x: p.day, y: p.soh })),
+        borderColor: colors[i], backgroundColor: colors[i] + '22',
+        fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2
+    }));
+    datasets.push({ label: 'End of life (70%)', data: [{ x: 0, y: 70 }, { x: data.scenarios[0].trajectory.slice(-1)[0].day, y: 70 }], borderColor: '#9ca3af', borderDash: [5, 5], pointRadius: 0, borderWidth: 1, fill: false });
+    simChart = new Chart(ctx, { type: 'line', data: { datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'linear', title: { display: true, text: 'Days' } }, y: { title: { display: true, text: 'SOH (%)' }, min: 50, max: 105 } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } } } });
+    const sum = document.getElementById('sim-summary'); sum.classList.remove('hidden');
+    sum.innerHTML = data.scenarios.map((sc, i) => `<div class="stat"><span class="label">${sc.label}</span><span class="value" style="color:${colors[i]}">${sc.eol_day ? sc.eol_day + ' days' : '> horizon'}</span><span class="note">to EOL</span></div>`).join('');
+}
+
+function runSimulationSSE() {
+    const horizon = parseInt(document.getElementById('sim-horizon').value);
+    const colors = ['#2563eb', '#d97706', '#dc2626'];
+    const ctx = document.getElementById('sim-chart').getContext('2d');
+    if (simChart) simChart.destroy();
+    simChart = new Chart(ctx, {
+        type: 'line', data: {
+            datasets: [1, 2, 3].map(i => ({
+                label: `${document.getElementById('sim-cpd' + i).value}×/day @ ${document.getElementById('sim-temp' + i).value}°C`,
+                data: [], borderColor: colors[i - 1], backgroundColor: colors[i - 1] + '22',
+                fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2
+            }))
+        }, options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { x: { type: 'linear', title: { display: true, text: 'Days' } }, y: { title: { display: true, text: 'SOH (%)' }, min: 50, max: 105 } }, plugins: { legend: { position: 'bottom' } } }
+    });
+    [1, 2, 3].forEach(i => {
+        const cpd = parseFloat(document.getElementById('sim-cpd' + i).value);
+        const temp = parseFloat(document.getElementById('sim-temp' + i).value);
+        const es = new EventSource(`${API}/simulate/stream?cpd=${cpd}&temp=${temp}&horizon_days=${horizon}`);
+        es.onmessage = ev => { const p = JSON.parse(ev.data); simChart.data.datasets[i - 1].data.push({ x: p.day, y: p.soh }); simChart.update('none'); };
+        es.addEventListener('done', () => es.close());
+        es.onerror = () => es.close();
+    });
+}
+
+// =============== CHAT ===============
+document.getElementById('chat-form').addEventListener('submit', e => { e.preventDefault(); const msg = document.getElementById('chat-input').value.trim(); if (msg) sendChat(msg); });
+async function sendChat(msg) {
+    const mc = document.getElementById('chat-messages');
+    mc.innerHTML += `<div class="flex"><div class="chat-msg chat-user">${msg}</div></div>`;
+    document.getElementById('chat-input').value = '';
+    mc.innerHTML += `<div class="flex" id="chat-loading"><div class="chat-msg chat-bot"><i class="fas fa-spinner fa-spin"></i> Thinking…</div></div>`;
+    mc.scrollTop = mc.scrollHeight;
+    const body = { message: msg }; if (lastFeatures) body.battery_context = lastFeatures;
+    try {
+        const r = await fetch(API + '/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        document.getElementById('chat-loading')?.remove();
+        if (r.ok) { const d = await r.json(); mc.innerHTML += `<div class="flex"><div class="chat-msg chat-bot">${d.reply.replace(/\n/g, '<br>')}</div></div>`; }
+        else mc.innerHTML += `<div class="flex"><div class="chat-msg chat-bot" style="color:var(--danger)">Error.</div></div>`;
+    } catch (e) { document.getElementById('chat-loading')?.remove(); mc.innerHTML += `<div class="flex"><div class="chat-msg chat-bot" style="color:var(--danger)">Connection error.</div></div>`; }
+    mc.scrollTop = mc.scrollHeight;
+}
+
+// =============== FLEET ===============
+function addCurrentToFleet() {
+    if (!lastPrediction) { alert('Make a prediction first.'); return; }
+    const d = lastPrediction;
+    fleet.push({ id: 'BAT-' + String(fleet.length + 1).padStart(3, '0'), soh: d.soh, risk: d.risk?.risk_level || 'N/A', risk_score: d.risk?.overall_risk || 0, days: d.rul?.remaining_days ?? '?', cycles: d.rul?.remaining_cycles ?? '?', capacity: lastFeatures?.capacity || 0, cycle_count: lastFeatures?.cycle_number || 0, added: new Date().toLocaleDateString(), features: lastFeatures });
+    localStorage.setItem('battery_fleet', JSON.stringify(fleet));
+    renderFleet(); switchTab('fleet');
+}
+function renderFleet() {
+    if (!fleet.length) { document.getElementById('fleet-empty').classList.remove('hidden'); document.getElementById('fleet-table').classList.add('hidden'); return; }
+    document.getElementById('fleet-empty').classList.add('hidden'); document.getElementById('fleet-table').classList.remove('hidden');
+    const sorted = [...fleet].sort((a, b) => b.risk_score - a.risk_score);
+    document.getElementById('fleet-body').innerHTML = sorted.map(b => {
+        const rc = b.risk_score >= 75 ? 'var(--danger)' : b.risk_score >= 50 ? 'var(--warning)' : b.risk_score >= 25 ? 'var(--warning)' : 'var(--success)';
+        const sc = b.soh >= 80 ? 'var(--success)' : b.soh >= 70 ? 'var(--warning)' : 'var(--danger)';
+        return `<tr><td class="mono text-xs">${b.id}</td><td class="mono" style="color:${sc};font-weight:600">${b.soh.toFixed(1)}%</td><td style="color:${rc}">${b.risk}</td><td class="mono">${b.days}</td><td class="mono">${b.capacity.toFixed(2)}</td><td class="mono">${b.cycle_count}</td><td class="text-xs text-muted">${b.added}</td><td><button onclick="removeFleet('${b.id}')" class="btn btn-ghost btn-icon btn-sm"><i class="fas fa-trash"></i></button></td></tr>`;
+    }).join('');
+    const critical = sorted.filter(b => b.risk_score >= 50);
+    if (critical.length) { document.getElementById('fleet-priority').classList.remove('hidden'); document.getElementById('fleet-priority-text').textContent = `${critical.length} need attention: ${critical.map(b => b.id + ' (' + b.risk + ')').join(', ')}`; }
+    else document.getElementById('fleet-priority').classList.add('hidden');
+}
+function removeFleet(id) { fleet = fleet.filter(b => b.id !== id); localStorage.setItem('battery_fleet', JSON.stringify(fleet)); renderFleet(); }
+
+// =============== TRANSFER ===============
+let transferLoaded = false;
+async function loadTransferData() {
+    if (transferLoaded) return;
+    try {
+        const r = await fetch(API + '/model/generalization');
+        if (!r.ok) throw new Error();
+        const d = await r.json();
+        document.getElementById('transfer-loading').classList.add('hidden');
+        document.getElementById('transfer-content').classList.remove('hidden');
+        const bats = d.batteries;
+        document.getElementById('transfer-cards').innerHTML = Object.entries(bats).map(([id, m]) => {
+            const tag = m.is_training ? '<span class="status-chip good">Training</span>' : '<span class="status-chip excellent">Unseen</span>';
+            const cl = m.is_training ? '' : 'success';
+            return `<div class="stat ${cl}"><span class="label">${id} ${tag}</span><span class="value mono" style="font-size:1.1rem">R² ${m.r2.toFixed(3)}</span><span class="note">MAE ${m.mae.toFixed(2)}% · RMSE ${m.rmse.toFixed(2)}% · ${m.n_cycles} cycles</span></div>`;
+        }).join('');
+        const ids = Object.keys(bats), r2s = ids.map(k => bats[k].r2), maes = ids.map(k => bats[k].mae);
+        const ctx = document.getElementById('transfer-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar', data: { labels: ids, datasets: [{ label: 'R²', data: r2s, backgroundColor: 'rgba(37,99,235,.6)', borderColor: '#2563eb', borderWidth: 1, yAxisID: 'y' }, { label: 'MAE (%)', data: maes, backgroundColor: 'rgba(220,38,38,.6)', borderColor: '#dc2626', borderWidth: 1, yAxisID: 'y1' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 1.05, title: { display: true, text: 'R²' }, position: 'left' }, y1: { beginAtZero: true, max: 100, title: { display: true, text: 'MAE (%)' }, position: 'right', grid: { drawOnChartArea: false } } }, plugins: { legend: { position: 'bottom' } } }
+        });
+        transferLoaded = true;
+    } catch { document.getElementById('transfer-loading').textContent = 'Failed to load metrics.'; }
+}
+
+// =============== PHASE 5 ===============
+let p5Loaded = false;
+async function loadPhase5() {
+    try {
+        const r = await fetch(API + '/api/phase5/manifest');
+        if (!r.ok) throw new Error('Phase 5 not yet generated. Run `make rigor`.');
+        const data = await r.json(); const m = data.manifest;
+        document.getElementById('p5-loading').classList.add('hidden');
+        document.getElementById('p5-content').classList.remove('hidden');
+        const lk = m.steps.leakage?.summary || {}, cal = m.steps.calibration?.summary || {}, fg = m.steps.failure_gallery?.summary || {};
+        document.getElementById('p5-leakage').textContent = (lk.raw_roc_auc ?? 0).toFixed(3);
+        document.getElementById('p5-picp').textContent = (cal.picp_at_90 ?? 0).toFixed(3);
+        document.getElementById('p5-ece').textContent = (cal.ece ?? 0).toFixed(3);
+        document.getElementById('p5-mae').textContent = (fg.mae ?? 0).toFixed(2) + '%';
+        p5Loaded = true;
+        loadPhase6();
+    } catch (e) {
+        document.getElementById('p5-loading').innerHTML = `<div class="panel" style="background:var(--warning-soft); color:var(--warning);">${e.message}</div><div class="text-xs text-muted" style="margin-top:8px;">Run <span class="mono">make rigor</span> from the project root.</div>`;
+    }
+}
+
+// =============== PHASE 6 ===============
+let p6Loaded = false;
+async function loadPhase6() {
+    if (p6Loaded) return;
+    try {
+        const r = await fetch(API + '/api/phase6/manifest');
+        if (!r.ok) throw new Error('Phase 6 not yet generated. Run `make deferred`.');
+        const data = await r.json(); const m = data.manifest || {}; const modules = m.modules || {};
+        document.getElementById('p6-loading').classList.add('hidden');
+        document.getElementById('p6-content').classList.remove('hidden');
+        const cards = Object.entries(modules).map(([k, info]) => {
+            const head = info.head || {};
+            const status = info.status || '?';
+            const badgeColor = status === 'ok' ? 'success' : (status === 'skipped' ? 'warning' : 'danger');
+            const sc = status === 'ok' ? 'var(--success)' : (status === 'skipped' ? 'var(--warning)' : 'var(--danger)');
+            let summary = '';
+            if (k === 'pinn_sweep' && head.top1) {
+                summary = `<div class="text-xs">Best weights α=(${head.top1.alpha_mono}, ${head.top1.alpha_arr}, ${head.top1.alpha_cap})</div>
+                           <div class="text-xs">MAE ${head.top1.test_mae} vs baseline ${head.baseline_no_penalty?.test_mae}</div>`;
+            } else if (k === 'lobo_cv') {
+                summary = `<div class="text-xs">NASA-only MAE ${head.nasa_only_overall_mae}</div>
+                           <div class="text-xs">+Mendeley MAE ${head.combined_overall_mae} <span style="color:var(--danger)">(regression)</span></div>`;
+            } else if (k === 'tent_adapt' && head.baseline_no_adapt) {
+                summary = `<div class="text-xs">No adapt: MAE ${head.baseline_no_adapt.mae}</div>
+                           <div class="text-xs">TENT scaler: MAE ${head.tent_scaler_only.mae} <span style="color:var(--success)">(~${Math.round(head.baseline_no_adapt.mae / Math.max(head.tent_scaler_only.mae,1e-6))}×)</span></div>`;
+            } else if (k === 'curriculum') {
+                const a = head.aggregates || {};
+                summary = `<div class="text-xs">random tail MAE ${a.random?.tail_mae_mean}</div>
+                           <div class="text-xs">easy-first ${a.easy_first?.tail_mae_mean}</div>
+                           <div class="text-xs text-muted">verdict: ${head.verdict}</div>`;
+            } else if (k === 'ssl_contrastive') {
+                summary = `<div class="text-xs">raw Ridge MAE ${head.raw?.mae}</div>
+                           <div class="text-xs">contrastive ${head.contrastive?.mae_mean} ± ${head.contrastive?.mae_std}</div>
+                           <div class="text-xs text-muted">verdict: ${head.verdict}</div>`;
+            } else if (k === 'rap_benchmark') {
+                summary = `<div class="text-xs">template MAE ${head.template_mae_via_top_hit} · LLM MAE ${head.llm_mae_via_top_hit}</div>
+                           <div class="text-xs">LLM used ${head.llm_actually_used}/${head.n_samples}</div>`;
+            } else if (k === 'llm_feature_discovery') {
+                const b = head.baseline || {};
+                summary = `<div class="text-xs">baseline R² ${b.base_r2}, MAE ${b.base_mae}</div>
+                           <div class="text-xs">proposals evaluated: ${head.n_evaluated}/${head.n_proposals}</div>`;
+            } else {
+                summary = `<div class="text-xs text-muted">${JSON.stringify(head).slice(0, 120)}…</div>`;
+            }
+            return `<div class="p5card">
+                <div class="flex" style="justify-content:space-between;align-items:center;">
+                    <strong style="text-transform:capitalize">${k.replace(/_/g, ' ')}</strong>
+                    <span class="text-xs mono" style="color:${sc}">[${status}] ${info.seconds ?? '?'}s</span>
+                </div>
+                ${summary}
+                <a class="text-xs" href="/api/phase6/manifest" target="_blank"><i class="fas fa-arrow-up-right-from-square"></i> raw json</a>
+            </div>`;
+        }).join('');
+        document.getElementById('p6-modules').innerHTML = cards || '<div class="text-xs text-muted">no modules in manifest</div>';
+        p6Loaded = true;
+    } catch (e) {
+        document.getElementById('p6-loading').innerHTML = `<div class="panel" style="background:var(--warning-soft); color:var(--warning);">${e.message}</div><div class="text-xs text-muted" style="margin-top:8px;">Run <span class="mono">make deferred</span> from the project root.</div>`;
+    }
+}
+
+// =============== HELPERS ===============
+function getFormFeatures() {
+    const fd = new FormData(document.getElementById('predict-form')); const raw = {}; fd.forEach((v, k) => raw[k] = parseFloat(v));
+    return { capacity: raw.capacity_mah / 1000, cycle_number: Math.round(raw.cycle_number), voltage_min: raw.voltage_min, voltage_max: raw.voltage_max, temp_mean: raw.temp_mean, discharge_time: raw.discharge_hours * 3600, charges_per_day: raw.charges_per_day };
+}
+const presets = {
+    new:      { capacity_mah: 1856, cycle_number: 0,   voltage_min: 2.64, voltage_max: 4.19, temp_mean: 32.7, discharge_hours: 1.03, charges_per_day: 1 },
+    good:     { capacity_mah: 1783, cycle_number: 37,  voltage_min: 2.71, voltage_max: 4.20, temp_mean: 31.5, discharge_hours: 0.93, charges_per_day: 1 },
+    moderate: { capacity_mah: 1602, cycle_number: 73,  voltage_min: 2.68, voltage_max: 4.20, temp_mean: 32.5, discharge_hours: 0.87, charges_per_day: 1 },
+    degraded: { capacity_mah: 1417, cycle_number: 115, voltage_min: 2.67, voltage_max: 4.20, temp_mean: 33.6, discharge_hours: 0.82, charges_per_day: 1 },
+    critical: { capacity_mah: 1347, cycle_number: 125, voltage_min: 2.48, voltage_max: 4.18, temp_mean: 33.8, discharge_hours: 0.81, charges_per_day: 2 }
+};
+function loadPreset(t) {
+    const p = presets[t];
+    for (const [k, v] of Object.entries(p)) {
+        const inp = document.querySelector(`input[name="${k}"]`); if (!inp) continue;
+        inp.value = v;
+        if (inp.type === 'range') {
+            updateRangeGradient(inp);
+            const sp = inp.nextElementSibling;
+            if (sp && sp.classList.contains('range-val')) {
+                if (k === 'capacity_mah') sp.textContent = v + ' mAh';
+                else if (k === 'cycle_number') sp.textContent = v;
+                else if (k === 'temp_mean') sp.textContent = v + ' °C';
+                else if (k === 'discharge_hours') sp.textContent = v + ' h';
+                else if (k === 'charges_per_day') sp.textContent = v + '×';
+            }
+        }
+    }
+}
+
+// =============== PHASE 4 ===============
+let phase4Loaded = false;
+async function loadPhase4Info() {
+    try {
+        const d = await fetch(API + '/phase4/info').then(r => r.json());
+        const banner = document.getElementById('phase4-info-banner');
+        if (!d.loaded) { banner.innerHTML = '<i class="fas fa-triangle-exclamation" style="color:var(--warning)"></i> Phase 4 calibration artefact missing. Run <span class="mono">python scripts/fit_phase4.py</span>.'; return; }
+        const conf = (d.contributions || []).find(c => c.id === 'conformal') || {};
+        const ret = (d.contributions || []).find(c => c.id === 'rap') || {};
+        const wei = (d.contributions || []).find(c => c.id === 'weibull_rul') || {};
+        const pin = (d.contributions || []).find(c => c.id === 'pinn') || {};
+        const llmOn = ret.llm_available || ret.openai_available;
+        const llmLabel = llmOn ? (ret.llm_provider ? `${ret.llm_provider} · ${ret.llm_model || ''}` : 'on') : '<span style="color:var(--danger)">off — add API key</span>';
+        banner.innerHTML = `
+            <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="stat"><span class="label">Calibration set</span><span class="value" style="font-size:.95rem">${conf.calibration_n ?? '?'}</span><span class="note">cycles</span></div>
+                <div class="stat"><span class="label">± @ 90%</span><span class="value" style="font-size:.95rem;color:var(--accent)">${(conf.marginal_q_hat_90 ?? 0).toFixed(1)}%</span><span class="note">SOH</span></div>
+                <div class="stat"><span class="label">Weibull k</span><span class="value" style="font-size:.95rem;color:var(--warning)">${(wei.shape ?? 0).toFixed(2)}</span><span class="note">${(wei.shape ?? 1) > 1 ? 'wear-out' : 'infant-mortality'}</span></div>
+                <div class="stat"><span class="label">Diagnosis AI</span><span class="value" style="font-size:.95rem;color:var(--success)">${llmLabel}</span><span class="note">${ret.corpus_size ?? 0} past cycles</span></div>
+            </div>`;
+        document.getElementById('pinn-summary').textContent = pin.description || '';
+        const w = pin.loss_weights || {};
+        document.getElementById('pinn-weights').textContent = 'Weights: ' + Object.entries(w).map(([k, v]) => `${k}=${v}`).join(' · ');
+        phase4Loaded = true;
+    } catch (e) { document.getElementById('phase4-info-banner').textContent = 'Phase 4 endpoint unreachable: ' + e.message; }
+}
+async function runConformal() {
+    const features = getFormFeatures(); const confidence_pct = parseInt(document.getElementById('conf-pct').value);
+    try {
+        const r = await fetch(API + '/predict/conformal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ features, confidence_pct }) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        document.getElementById('conf-result').classList.remove('hidden');
+        document.getElementById('conf-soh').textContent = d.soh.toFixed(2) + '%';
+        const coverage = (d.target_coverage * 100).toFixed(0);
+        document.getElementById('conf-conf-label').textContent = `at ${coverage}% confidence the true value lies between`;
+        document.getElementById('conf-band').textContent = `${d.lower.toFixed(2)}% — ${d.upper.toFixed(2)}%   (±${d.q_hat.toFixed(2)})`;
+        document.getElementById('conf-meta').innerHTML = `Calibrated on <strong>${d.calibration_n}</strong> held-out cycles.`;
+    } catch (e) { alert('Uncertainty request failed: ' + e.message); }
+}
+async function runRUL() {
+    const features = getFormFeatures();
+    try {
+        const r = await fetch(API + '/predict/rul', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ features, horizon_days: 365 }) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        document.getElementById('rul-result').classList.remove('hidden');
+        document.getElementById('rul-p10').textContent = d.p10_remaining_cycles.toFixed(0);
+        document.getElementById('rul-med').textContent = d.median_remaining_cycles.toFixed(0);
+        document.getElementById('rul-p90').textContent = d.p90_remaining_cycles.toFixed(0);
+        const max = Math.max(d.p90_remaining_cycles, 1);
+        const left = (d.p10_remaining_cycles / max) * 100;
+        const width = Math.max(2, ((d.p90_remaining_cycles - d.p10_remaining_cycles) / max) * 100);
+        const med = (d.median_remaining_cycles / max) * 100;
+        document.getElementById('rul-bar-band').style.left = left + '%'; document.getElementById('rul-bar-band').style.width = width + '%';
+        document.getElementById('rul-bar-median').style.left = med + '%';
+        document.getElementById('rul-days-line').innerHTML = `~<strong>${d.median_remaining_days.toFixed(0)} days</strong> (${d.p10_remaining_days.toFixed(0)}–${d.p90_remaining_days.toFixed(0)})`;
+        document.getElementById('rul-meta').innerHTML = `EOL = <strong>${d.eol_threshold_pct}% SOH</strong> · Weibull(scale=${d.weibull_scale.toFixed(0)}, shape=${d.weibull_shape.toFixed(2)}).`;
+    } catch (e) { alert('RUL request failed: ' + e.message); }
+}
+async function runRAP() {
+    const features = getFormFeatures(); const k = parseInt(document.getElementById('rap-k').value); const use_llm = document.getElementById('rap-llm').checked;
+    try {
+        const r = await fetch(API + '/diagnose/rap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ features, k, use_llm }) });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        document.getElementById('rap-result').classList.remove('hidden');
+        const tag = d.used_llm ? '<span class="status-chip excellent">AI</span>' : '<span class="status-chip">template</span>';
+        document.getElementById('rap-text').innerHTML = tag + ' ' + d.diagnosis;
+        document.getElementById('rap-hits').innerHTML = (d.hits || []).map(h => `<li><strong>${h.battery_id}</strong> · cycle ${h.cycle_number} · SOH ${h.soh.toFixed(1)}% <span class="text-soft">(sim ${(1 - h.cosine_distance).toFixed(2)})</span></li>`).join('');
+    } catch (e) { alert('Diagnosis request failed: ' + e.message); }
+}
+
+// =============== PER-TAB TOURS ===============
+// Every tab has its own tour. The route-icon button in the header
+// launches the tour for whichever tab is active. Each step has a
+// selector + short hint; missing selectors are skipped so the tour
+// is resilient to DOM changes.
+const TOURS = {
+    'overview': [
+        { el: '#hero-tiles',                      text: 'Four-tile summary of project status and headline metrics.' },
+        { el: '#tabs-bar',                        text: 'Tabs are organised left-to-right from entry points to deep research views.' },
+        { el: '.tab-btn[data-tab="predict"]',     text: 'Predict with sliders, presets, or drop a CSV.' },
+        { el: '.tab-btn[data-tab="phase5"]',      text: 'The Rigor tab exposes the Phase 5 + Phase 6 diagnostic suites.' },
+        { el: '#btn-theme',                       text: 'Toggle between light and dark themes.' },
+    ],
+    'predict': [
+        { el: '#predict-form',                    text: 'Set the cycle\'s current state. The help icons explain each physical quantity.' },
+        { el: '.preset-row, [onclick^="loadPreset"]', text: 'Presets fill real NASA cycle values — New → Critical along the ageing curve.' },
+        { el: '#csv-dz',                          text: 'Drop a CSV with the same six columns to score a batch at once.' },
+        { el: '#risk-box, #predict-form button[type="submit"]', text: 'Submit to get SOH + uncertainty band + risk score in one call.' },
+        { el: '.tab-btn[data-tab="phase4"]',      text: 'After a prediction, the Advanced tab adds conformal intervals, RUL, SHAP, and RAP.' },
+    ],
+    'timeline': [
+        { el: '#tl-battery',                      text: 'Pick a NASA battery. Each cell has ~168 cycles from new to end-of-life.' },
+        { el: '#tl-slider',                       text: 'Drag to scrub through cycles. The gauge and chart update live.' },
+        { el: '#tl-play',                         text: 'Animate auto-plays the whole life cycle at 5× real time.' },
+        { el: '#tl-chart',                        text: 'The curve shows capacity fade. A sudden drop is the knee point — the model cares most about predicting this.' },
+    ],
+    'simulator': [
+        { el: '#sim-horizon',                     text: 'Horizon = how many future cycles to simulate.' },
+        { el: '[id^="sim-cpd"], [id^="sim-temp"]', text: 'Three scenarios side-by-side: mild / moderate / aggressive usage.' },
+        { el: '#sim-chart',                       text: 'Each trace is the model\'s predicted SOH under one usage profile.' },
+        { el: '#sim-summary',                     text: 'Summary cards show expected cycles-to-EoL for each scenario.' },
+    ],
+    'phase5': [
+        { el: '#p5-content .stat-grid, #p5-content',   text: 'Four top-line findings from the Phase-5 rigor suite (leakage, PICP, ECE, MAE).' },
+        { el: '#p6-modules',                      text: 'Phase-6 deferred suite: 7 follow-up modules with status and headline numbers.' },
+    ],
+    'phase4': [
+        { el: '#phase4-info-banner',              text: 'This tab depends on a prediction — fill the Predict tab first.' },
+        { el: '#conf-pct',                        text: 'Conformal uncertainty: provable 90% or 95% coverage on the predicted SOH.' },
+        { el: '#rul-result, [onclick="runRUL()"]', text: 'Weibull RUL: pessimistic / most-likely / optimistic cycles to EoL.' },
+        { el: '#shap-box, #shap-chart',           text: 'SHAP: which feature pushed the prediction up or down, and by how much.' },
+        { el: '#rap-result, #rap-text',           text: 'RAP: LLM diagnosis grounded in the 5 nearest historical cycles.' },
+    ],
+    'chat': [
+        { el: '#chat-messages',                   text: 'Conversation history lives here. It includes the model\'s cited cycles.' },
+        { el: '#chat-input',                      text: 'Ask questions in natural language — e.g. "Why is the risk score high?"' },
+        { el: '#chat-form button, #chat-form',    text: 'Send. Responses are grounded in the current prediction and the cycle corpus.' },
+    ],
+    'fleet': [
+        { el: '#fleet-table, #fleet-empty',       text: 'One row per battery with live health + slope.' },
+        { el: '#fleet-priority',                  text: 'The priority panel lists degraded cells that need attention first.' },
+    ],
+    'transfer': [
+        { el: '#transfer-cards, #transfer-content', text: 'Each card: train on the other two batteries, test on this one — a cross-battery hold-out.' },
+        { el: '#transfer-chart',                  text: 'Dual-axis: R² (blue) and MAE (red) per held-out battery. Compare with the Phase-6 LOBO numbers.' },
+    ],
+};
+
+function activeTabKey() {
+    const panel = document.querySelector('.tab-panel.active');
+    if (!panel) return 'overview';
+    return (panel.id || 'tab-overview').replace(/^tab-/, '');
+}
+
+function startTour(forceKey) {
+    if (typeof Shepherd === 'undefined') return;
+    const key = forceKey || activeTabKey();
+    const steps = (TOURS[key] || TOURS['overview']).filter(s => document.querySelector(s.el));
+    if (!steps.length) {
+        // Fall back to the overview tour on any tab with no matching elements.
+        return startTour('overview');
+    }
+    const tour = new Shepherd.Tour({
+        defaultStepOptions: { cancelIcon: { enabled: true }, scrollTo: { behavior: 'smooth', block: 'center' } },
+        useModalOverlay: true,
+    });
+    steps.forEach((s, i) => {
+        const first = i === 0, last = i === steps.length - 1;
+        const buttons = [];
+        if (!first) buttons.push({ text: 'Back', action: tour.back });
+        buttons.push({ text: last ? 'Done' : 'Next', action: last ? tour.complete : tour.next });
+        tour.addStep({
+            text: `<div style="font-size:13px; line-height:1.5;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; margin-bottom:6px;">${key} tour · step ${i+1} of ${steps.length}</div>${s.text}</div>`,
+            attachTo: { element: s.el, on: s.on || 'bottom' },
+            buttons,
+        });
+    });
+    tour.start();
+    localStorage.setItem('soh_tour_done', '1');
+}
+document.getElementById('btn-tour').addEventListener('click', () => startTour());
+// Update the button tooltip dynamically so users know which tab the tour covers.
+function refreshTourTooltip() {
+    const btn = document.getElementById('btn-tour');
+    if (!btn) return;
+    btn.title = `Guided tour · ${activeTabKey()} tab`;
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => setTimeout(refreshTourTooltip, 0)));
+refreshTourTooltip();
+if (!localStorage.getItem('soh_tour_done')) setTimeout(() => startTour('overview'), 800);
+
+// =============== per-tab GUIDE registry ===============
+// Auto-injects a collapsible "How to use this tab" panel at the top of
+// every .tab-panel. Edit the GUIDES object below to change copy without
+// touching the HTML for each tab.
+const GUIDES = {
+    'tab-overview': {
+        title: 'Project overview — how to read this dashboard',
+        what: ['Top-line metrics for the production Ridge model.',
+               'Three shortcut tiles jump to the most-used tabs.',
+               'Grey tiles are live from the API; dashes mean the API is still warming up.'],
+        how:  ['Click any of the three <strong>Start here</strong> cards to jump to that workflow.',
+               'Use the tabs across the top to move around; the Overview pill stays highlighted so you know your home.'],
+        read: ['<code>R²</code> near 1.0 = perfect fit on held-out cycles.',
+               '<code>MAE</code> in SOH percentage points — lower is better.',
+               '<code>Last rigor run</code> shows CO₂ in grams of the most recent <code>make rigor</code>.']
+    },
+    'tab-predict': {
+        title: 'Single-cycle SOH prediction',
+        what: ['Estimates the <strong>State of Health (SOH)</strong> of one battery cycle given its measurements.',
+               '19-feature Ridge regressor trained on NASA PCoE + Mendeley forklift data.',
+               'Reports the prediction plus an uncertainty band from 20 bootstrap models.'],
+        how:  ['<strong>Sliders:</strong> set capacity, cycle number, voltage, temperature, discharge time.',
+               '<strong>Presets</strong> (New / Good / Moderate / Degraded / Critical) fill real cycle values.',
+               '<strong>CSV upload:</strong> drop a file with the six input columns for batch scoring.'],
+        read: ['SOH > 80% = healthy. 70-80% = showing wear. < 70% = degraded.',
+               'The <em>uncertainty band</em> is a 90% bootstrap interval — narrow = confident.',
+               'A high <em>risk score</em> means rapid expected degradation in the next 10 cycles.']
+    },
+    'tab-timeline': {
+        title: 'Degradation timeline — replay a real battery\'s life',
+        what: ['Plays back every cycle of a NASA B0005/6/7 cell from new to end-of-life.',
+               'Live SOH, capacity, and temperature traces as you scrub.'],
+        how:  ['Pick a battery from the dropdown.',
+               'Drag the scrubber left/right to move through cycles.',
+               'Use <strong>Play</strong> for automatic playback at 5× real time.'],
+        read: ['Smooth downward SOH curve = normal capacity fade.',
+               'A <strong>sharp drop</strong> (knee point) signals accelerated ageing — typically after ~80% SOH.',
+               'Temperature spikes often precede capacity drops: thermal stress is a degradation driver.']
+    },
+    'tab-simulator': {
+        title: 'Live prediction stream (Server-Sent Events)',
+        what: ['Streams predictions cycle-by-cycle as the server processes them.',
+               'Demonstrates real-time inference throughput of the production model.'],
+        how:  ['Click <strong>Start stream</strong> to open an SSE connection.',
+               '<strong>Pause</strong> freezes the chart; <strong>Stop</strong> closes the stream.',
+               'The <em>speed</em> slider controls how fast synthetic cycles are fed in.'],
+        read: ['Each dot is one prediction. The line traces the rolling SOH estimate.',
+               'Latency badge shows time from request to reply — under 50 ms means the model is keeping up.',
+               'A widening uncertainty band at high cycles is expected (data gets sparser near EoL).']
+    },
+    'tab-phase5': {
+        title: 'Rigor suite — Phase 5 + Phase 6',
+        what: ['<strong>Phase 5</strong>: leakage probe, calibration, weighted conformal, survival, causal Shapley, counterfactuals, failure gallery, carbon.',
+               '<strong>Phase 6</strong>: RAP benchmark, LLM features, PINN sweep, LOBO CV, TENT, curriculum, SSL (7 deferred modules).',
+               'Every card is backed by a JSON sidecar in <code>results/phase5/</code> or <code>results/phase6/</code>.'],
+        how:  ['Run <code>make rigor</code> in a terminal (≈41 s) to generate Phase-5 results.',
+               'Run <code>make deferred</code> (≈89 s) for Phase-6 results.',
+               'Refresh this tab — cards update from the manifest.'],
+        read: ['Source-classifier <strong>AUC = 1.000</strong> means NASA and Mendeley are trivially separable (domain shift).',
+               '<strong>ECE</strong> closer to 0 = better calibration. <strong>PICP@90</strong> should be ~0.90.',
+               'Verdict badges: <span style="color:var(--success)">ok</span> = ran, <span style="color:var(--warning)">skipped</span> = prerequisite missing, <span style="color:var(--danger)">exception</span> = check the trace.']
+    },
+    'tab-phase4': {
+        title: 'Advanced diagnostics — conformal, survival, SHAP, RAP',
+        what: ['<strong>Uncertainty range</strong>: split-conformal prediction with provable 90/95% coverage.',
+               '<strong>Remaining life</strong>: Weibull survival model → pessimistic / most-likely / optimistic cycles to EoL.',
+               '<strong>SHAP</strong>: per-feature attribution for the current prediction.',
+               '<strong>Retrieval-Augmented Prognostics (RAP)</strong>: LLM-generated diagnosis grounded in 5 nearest historical cycles.'],
+        how:  ['Fill the inputs on the <strong>Predict</strong> tab first.',
+               'Come back here and press the button for the diagnostic you want.',
+               'Hover any metric for its definition.'],
+        read: ['Uncertainty band width grows with cycle count — that\'s correct.',
+               'RUL <strong>p10</strong> is the conservative (fleet-planning) estimate; <strong>p50</strong> is most-likely.',
+               'SHAP bars: red pushed SOH down, green pushed SOH up.',
+               'RAP diagnosis cites cycle IDs at the bottom — those are the retrieved neighbours.']
+    },
+    'tab-chat': {
+        title: 'Conversational LLM — ask about a cycle or the model',
+        what: ['Natural-language Q&A grounded in the current prediction and the cycle corpus.',
+               'Backed by Groq <code>llama-3.3-70b-versatile</code> (or OpenAI if configured).'],
+        how:  ['Type a question such as <em>"Why is this battery degrading fast?"</em> or <em>"What would lower the risk score?"</em>.',
+               'Include cycle context by running a prediction first — the chat reads the latest Predict result.'],
+        read: ['The answer cites retrieved cycles at the bottom — treat those as evidence, not ground truth.',
+               'If the LLM key is unset, the endpoint falls back to templated responses and says so.']
+    },
+    'tab-fleet': {
+        title: 'Fleet view — multi-battery health at a glance',
+        what: ['Side-by-side SOH + risk score for every battery currently in the dataset.',
+               'Sorted worst-first so end-of-life cells surface immediately.'],
+        how:  ['Opens with all loaded — no action needed.',
+               'Click a row to switch to the Timeline tab for that battery.'],
+        read: ['Red tiles: SOH < 70% (degraded).',
+               'Amber: 70-80% (wearing).',
+               'Green: > 80% (healthy).',
+               'The <strong>slope</strong> column shows per-cycle capacity loss — steeper = ageing faster.']
+    },
+    'tab-transfer': {
+        title: 'Generalization — cross-battery hold-out metrics',
+        what: ['For each NASA battery: train on the other two, test on the held-out one.',
+               'Quantifies how well the model transfers to a battery it has never seen.'],
+        how:  ['Auto-loads on tab open.',
+               'Dual-axis chart: R² (blue) and MAE (red) per held-out battery.'],
+        read: ['R² close to the Predict-tab value = strong cross-battery generalisation.',
+               'Large MAE gap vs the in-distribution number means the model may be over-fitting battery-specific patterns.',
+               'See the Phase-6 <strong>LOBO CV</strong> card for a multi-seed, time-split version of this same test.']
+    }
+};
+
+function injectGuides() {
+    for (const [tabId, g] of Object.entries(GUIDES)) {
+        const panel = document.getElementById(tabId);
+        if (!panel || panel.querySelector('details.guide')) continue;
+        const det = document.createElement('details');
+        det.className = 'guide';
+        // open by default on first visit to each tab
+        const key = 'guide_seen_' + tabId;
+        if (!localStorage.getItem(key)) { det.open = true; localStorage.setItem(key, '1'); }
+        det.innerHTML = `
+            <summary>${g.title}<span class="chev"><i class="fas fa-chevron-right"></i></span></summary>
+            <div class="guide-body">
+                <div class="guide-block">
+                    <h4><i class="fas fa-circle-question"></i>What this is</h4>
+                    <ul>${g.what.map(s => `<li>${s}</li>`).join('')}</ul>
+                </div>
+                <div class="guide-block">
+                    <h4><i class="fas fa-hand-pointer"></i>How to use it</h4>
+                    <ul>${g.how.map(s => `<li>${s}</li>`).join('')}</ul>
+                </div>
+                <div class="guide-block">
+                    <h4><i class="fas fa-chart-line"></i>How to read the result</h4>
+                    <ul>${g.read.map(s => `<li>${s}</li>`).join('')}</ul>
+                </div>
+            </div>`;
+        panel.insertBefore(det, panel.firstChild);
+    }
+}
+
+// Inline help-icon tooltips on key controls (injected once after DOM is ready)
+const HELP_TIPS = {
+    'capacity_mah':      'Measured discharge capacity of this cycle, in mAh. A new NASA B-series cell is ~1856 mAh; EoL is ~80% of that.',
+    'cycle_number':      'Cumulative charge-discharge cycle index. Degradation is non-linear — later cycles matter more.',
+    'voltage_min':       'Minimum terminal voltage during discharge. Falling over life is a sign of internal resistance growth.',
+    'voltage_max':       'Peak charge voltage. Usually clamped at 4.20 V; deviations flag BMS issues.',
+    'temp_mean':         'Mean cell temperature during the cycle. Arrhenius: every +10 °C roughly doubles the ageing rate.',
+    'discharge_hours':   'Time from 100% SoC to discharge cut-off. Decreases as capacity fades.',
+    'charges_per_day':   'Usage intensity — more cycles per day accelerates calendar and cycle aging jointly.',
+    'conf-pct':          'Target coverage for the prediction interval. 90% means the true SOH lies in the band 90% of the time over many predictions.',
+};
+function injectHelpIcons() {
+    for (const [id, tip] of Object.entries(HELP_TIPS)) {
+        const el = document.querySelector(`[name="${id}"], #${id}`);
+        if (!el) continue;
+        const label = el.closest('label') || el.previousElementSibling;
+        if (!label || label.querySelector('.help-icon')) continue;
+        const icon = document.createElement('span');
+        icon.className = 'help-icon';
+        icon.setAttribute('data-tip', tip);
+        icon.setAttribute('tabindex', '0');
+        icon.setAttribute('aria-label', tip);
+        icon.textContent = '?';
+        label.appendChild(icon);
+    }
+}
+
+injectGuides();
+injectHelpIcons();
+
+checkAPI(); setInterval(checkAPI, 30000); renderFleet(); loadHero();
+</script>
+</body>
+</html>

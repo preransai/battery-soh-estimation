@@ -1,0 +1,58 @@
+{
+  "raw": {
+    "representation": "raw",
+    "roc_auc": 1.0,
+    "balanced_accuracy": 1.0,
+    "permutation_roc_auc": 0.3787,
+    "n_samples": 3242,
+    "n_nasa": 504,
+    "n_mendeley": 2738,
+    "top_features": [
+      [
+        "voltage_max",
+        0.7932
+      ],
+      [
+        "temp_delta",
+        0.7338
+      ],
+      [
+        "temp_std",
+        0.7296
+      ],
+      [
+        "current_std",
+        0.6981
+      ],
+      [
+        "voltage_mean",
+        0.6311
+      ],
+      [
+        "current_mean",
+        0.6244
+      ],
+      [
+        "voltage_std",
+        0.6235
+      ],
+      [
+        "voltage_range",
+        0.6016
+      ],
+      [
+        "temp_max",
+        0.5704
+      ],
+      [
+        "temp_mean",
+        0.4663
+      ]
+    ],
+    "verdict": "SEVERE leakage (representation encodes source identity)"
+  },
+  "scaled": {
+    "skipped": true,
+    "reason": "X has 18 features, but StandardScaler is expecting 19 features as input."
+  }
+}

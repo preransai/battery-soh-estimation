@@ -1,0 +1,13 @@
+{
+  "features": {
+    "chg_cc_time_390_419_s": 2075.4,
+    "chg_cv_time_s": 4429.8,
+    "chg_ica_peak_height_ah_per_v": 3.942,
+    "chg_ica_peak_voltage_v": 4.008,
+    "chg_temp_rise_cc_c": 2.95,
+    "dis_q_380_350_ah": 0.6619,
+    "dis_r0_ohm": 0.1011,
+    "dis_temp_rise_win_c": 5.19
+  },
+  "confidence": 0.9
+}

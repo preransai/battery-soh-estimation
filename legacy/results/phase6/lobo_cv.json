@@ -1,0 +1,75 @@
+{
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "nasa_batteries": [
+    "B0005",
+    "B0006",
+    "B0007"
+  ],
+  "nasa_only": {
+    "per_battery": {
+      "B0005": {
+        "mae_mean": 5.5535,
+        "mae_std": 0.0,
+        "r2_mean": 0.6969,
+        "r2_std": 0.0,
+        "n_seeds": 3,
+        "test_n": 168
+      },
+      "B0006": {
+        "mae_mean": 5.4961,
+        "mae_std": 0.0,
+        "r2_mean": 0.7963,
+        "r2_std": 0.0,
+        "n_seeds": 3,
+        "test_n": 168
+      },
+      "B0007": {
+        "mae_mean": 5.4088,
+        "mae_std": 0.0,
+        "r2_mean": 0.5803,
+        "r2_std": 0.0,
+        "n_seeds": 3,
+        "test_n": 168
+      }
+    },
+    "overall_mae_mean": 5.4862,
+    "overall_mae_std": 0.0595,
+    "n_folds": 9
+  },
+  "combined_nasa_mendeley": {
+    "per_battery": {
+      "B0005": {
+        "mae_mean": 18.1026,
+        "mae_std": 0.0,
+        "r2_mean": -2.9704,
+        "r2_std": 0.0,
+        "n_seeds": 3,
+        "test_n": 168
+      },
+      "B0006": {
+        "mae_mean": 11.2304,
+        "mae_std": 0.0,
+        "r2_mean": -0.1118,
+        "r2_std": 0.0,
+        "n_seeds": 3,
+        "test_n": 168
+      },
+      "B0007": {
+        "mae_mean": 16.4446,
+        "mae_std": 0.0,
+        "r2_mean": -3.6353,
+        "r2_std": 0.0,
+        "n_seeds": 3,
+        "test_n": 168
+      }
+    },
+    "overall_mae_mean": 15.2592,
+    "overall_mae_std": 2.9281,
+    "n_folds": 9
+  },
+  "note": "Leave-one-battery-out: for each NASA battery, the remaining batteries form the training set. The 'combined' variant adds Mendeley cycles to training but still tests on the held-out NASA battery. All folds use Ridge(alpha=1.0) on the 19-feature vector with train-only standard scaling."
+}

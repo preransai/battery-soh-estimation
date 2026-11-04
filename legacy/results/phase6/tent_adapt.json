@@ -1,0 +1,41 @@
+{
+  "setup": {
+    "source": "NASA (B0005-07)",
+    "target": "Mendeley forklift",
+    "n_source": 504,
+    "n_target": 2738,
+    "feature_set": [
+      "capacity",
+      "cycle_number",
+      "voltage_min",
+      "voltage_max",
+      "temp_mean",
+      "discharge_time"
+    ]
+  },
+  "baseline_no_adapt": {
+    "mae": 1802.1007,
+    "rmse": 3146.6129,
+    "r2": -11243.1084
+  },
+  "tent_scaler_only": {
+    "mae": 63.7224,
+    "rmse": 66.1479,
+    "r2": -3.969
+  },
+  "tent_full_self_train": {
+    "mae": 1801.9311,
+    "rmse": 3145.7537,
+    "r2": -11236.9691
+  },
+  "oracle_labelled_target": {
+    "mae": 0.0703,
+    "rmse": 0.1211,
+    "r2": 1.0
+  },
+  "shift_diagnostics": {
+    "mean_abs_diff": 165.502,
+    "std_ratio": 51.706
+  },
+  "note": "TENT adaptation helps when the shift is purely a distribution scaling/shift. If the target marginals are too far from the source (as here), even the self-training variant plateaus well above oracle."
+}

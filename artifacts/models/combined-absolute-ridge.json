@@ -1,0 +1,420 @@
+{
+  "schema_version": "1.0",
+  "model_id": "combined-absolute-ridge",
+  "created_utc": "2026-10-12T07:39:55+00:00",
+  "package_version": "2.0.0",
+  "feature_set": "combined",
+  "mode": "absolute",
+  "n_reference_cycles": 5,
+  "features": [
+    "chg_ica_peak_height_ah_per_v",
+    "chg_ica_peak_voltage_v",
+    "dis_q_380_350_ah",
+    "dis_temp_rise_win_c"
+  ],
+  "label": {
+    "name": "soh_pct",
+    "definition": "100 * capacity / C0; C0 = median of first 5 QC-valid discharge capacities"
+  },
+  "preprocessing": {
+    "impute_median": [
+      3.8921200000000002,
+      4.01016,
+      0.6418835,
+      4.976015
+    ],
+    "scaler_mean": [
+      3.959236289308176,
+      4.016785676100629,
+      0.6638399150943396,
+      4.981651022012578
+    ],
+    "scaler_scale": [
+      0.9129461372535446,
+      0.03126992590919888,
+      0.18621455431984046,
+      0.3079832938049549
+    ]
+  },
+  "estimator": {
+    "type": "ridge",
+    "alpha": 0.1,
+    "coef": [
+      -2.4768734494357445,
+      -1.4000091182705399,
+      11.862779962577578,
+      -0.47748393392009253
+    ],
+    "intercept": 83.5981577044025
+  },
+  "output_clip": [
+    0.0,
+    120.0
+  ],
+  "conformal": {
+    "method": "group conformal (cv): full-data prediction +/- the exact conformal quantile of the pooled leave-one-battery-out absolute residuals over the training cells; each residual comes from a model fitted, selection included, without that residual's cell",
+    "quantiles": {
+      "0.8": 4.573283554808228,
+      "0.9": 6.859266831700737,
+      "0.95": 9.620799583804015
+    },
+    "n_scores": 636
+  },
+  "domain": {
+    "feature_min": [
+      2.19153,
+      3.94929,
+      0.276734,
+      4.07498
+    ],
+    "feature_max": [
+      6.0497,
+      4.10306,
+      1.0145,
+      5.78868
+    ],
+    "margin": 0.1,
+    "center": [
+      2.9047344543651893e-16,
+      -1.2546218431738877e-14,
+      1.0613452814026654e-16,
+      2.5695727865538213e-15
+    ],
+    "mahalanobis_threshold": 4.78925250255329,
+    "mahalanobis_quantile": 0.99,
+    "covariance_shrinkage": 0.005100117736404639,
+    "precision_matrix": [
+      [
+        9.246867418334352,
+        0.7702173130734508,
+        -8.023998746736005,
+        0.12809324757462406
+      ],
+      [
+        0.7702173130734508,
+        4.090778110811426,
+        2.6767814657781597,
+        -0.42978831113794314
+      ],
+      [
+        -8.023998746736005,
+        2.6767814657781592,
+        10.822079953447235,
+        -0.18266355112695046
+      ],
+      [
+        0.1280932475746241,
+        -0.42978831113794314,
+        -0.18266355112695043,
+        1.130189748598129
+      ]
+    ]
+  },
+  "training": {
+    "batteries": [
+      "B0005",
+      "B0006",
+      "B0007",
+      "B0018"
+    ],
+    "n_cycles": 636,
+    "features_sha256": "f6c4fb709c4810f76a71eaf3ee2b99f963e0fcc94d354dbe636ae8682333d997"
+  },
+  "metrics": {
+    "protocol": "leave-one-battery-out",
+    "source": "reports/benchmark/results.csv",
+    "spec": {
+      "experiment": "core_lobo",
+      "feature_set": "combined",
+      "mode": "absolute",
+      "model": "ridge_nfs"
+    },
+    "evaluates": "the whole training procedure (feature selection, penalty and fit) on each held-out cell; the shipped model is that procedure refitted on every cell",
+    "per_battery": {
+      "B0005": {
+        "n": 168,
+        "mae": 1.01596,
+        "rmse": 1.2087,
+        "r2": 0.986346,
+        "bias": -0.0445391,
+        "max_abs_error": 4.43702,
+        "coverage": {
+          "0.8": 1.0,
+          "0.9": 1.0,
+          "0.95": 1.0
+        },
+        "mean_width": {
+          "0.8": 13.1698,
+          "0.9": 16.3826,
+          "0.95": 32.1952
+        }
+      },
+      "B0006": {
+        "n": 168,
+        "mae": 6.45494,
+        "rmse": 6.97535,
+        "r2": 0.687664,
+        "bias": 6.41858,
+        "max_abs_error": 12.979,
+        "coverage": {
+          "0.8": 0.0,
+          "0.9": 0.0,
+          "0.95": 0.0
+        },
+        "mean_width": {
+          "0.8": 2.80031,
+          "0.9": 3.68702,
+          "0.95": 4.32026
+        }
+      },
+      "B0007": {
+        "n": 168,
+        "mae": 1.42395,
+        "rmse": 1.49423,
+        "r2": 0.969333,
+        "bias": 1.29481,
+        "max_abs_error": 3.01325,
+        "coverage": {
+          "0.8": 1.0,
+          "0.9": 1.0,
+          "0.95": 1.0
+        },
+        "mean_width": {
+          "0.8": 9.69972,
+          "0.9": 10.9626,
+          "0.95": 12.8222
+        }
+      },
+      "B0018": {
+        "n": 132,
+        "mae": 1.20987,
+        "rmse": 1.66658,
+        "r2": 0.960519,
+        "bias": -0.404358,
+        "max_abs_error": 7.11506,
+        "coverage": {
+          "0.8": 0.931818,
+          "0.9": 0.94697,
+          "0.95": 0.992424
+        },
+        "mean_width": {
+          "0.8": 6.24927,
+          "0.9": 8.08224,
+          "0.95": 11.4697
+        }
+      }
+    },
+    "mean": {
+      "mae": 2.52618,
+      "rmse": 2.83621,
+      "bias": 1.81612,
+      "r2": 0.880582,
+      "worst_mae": 6.45494,
+      "worst_battery": "B0006",
+      "n_batteries": 4,
+      "n_cycles": 636
+    },
+    "coverage_method": "cv",
+    "coverage": {
+      "0.8": 0.732954,
+      "0.9": 0.736742,
+      "0.95": 0.748106
+    },
+    "mean_width": {
+      "0.8": 7.97977,
+      "0.9": 9.77862,
+      "0.95": 15.2018
+    },
+    "coverage_min_battery": {
+      "0.8": 0.0,
+      "0.9": 0.0,
+      "0.95": 0.0
+    },
+    "definitions": {
+      "mae, rmse, bias": "mean over held-out cells of the per-cell value (signed bias = prediction - truth)",
+      "r2": "pooled over every held-out prediction",
+      "coverage, mean_width": "mean over held-out cells; interval = the held-out fold's model +/- conformal quantile of its own training cells' out-of-cell residuals (the construction this bundle ships)"
+    }
+  },
+  "explanation": {
+    "method": "exact linear attribution on standardized features",
+    "base_value": 83.5981577044025
+  },
+  "selection": {
+    "procedure": "nested backward elimination (battery_soh.evaluation.nested): start from every candidate; repeatedly drop the input whose removal most lowers the inner leave-one-battery-out MAE (penalty re-chosen from the grid at every step); stop when no removal improves it",
+    "scoring": "mean over inner leave-one-battery-out folds of the held-out cell's MAE",
+    "alphas": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "min_features": 1,
+    "tol": 1e-09,
+    "candidates": [
+      "chg_cc_time_390_419_s",
+      "chg_cv_time_s",
+      "chg_ica_peak_height_ah_per_v",
+      "chg_ica_peak_voltage_v",
+      "chg_temp_rise_cc_c",
+      "dis_q_380_350_ah",
+      "dis_r0_ohm",
+      "dis_temp_rise_win_c"
+    ],
+    "final": {
+      "selected": [
+        "chg_ica_peak_height_ah_per_v",
+        "chg_ica_peak_voltage_v",
+        "dis_q_380_350_ah",
+        "dis_temp_rise_win_c"
+      ],
+      "dropped": [
+        "chg_cv_time_s",
+        "chg_temp_rise_cc_c",
+        "chg_cc_time_390_419_s",
+        "dis_r0_ohm"
+      ],
+      "alpha": 0.1,
+      "inner_mae": 1.02871,
+      "n_groups": 4,
+      "fallback": false,
+      "path": [
+        {
+          "removed": null,
+          "n_features": 8,
+          "alpha": 10.0,
+          "inner_mae": 2.55265
+        },
+        {
+          "removed": "chg_cv_time_s",
+          "n_features": 7,
+          "alpha": 1.0,
+          "inner_mae": 1.65223
+        },
+        {
+          "removed": "chg_temp_rise_cc_c",
+          "n_features": 6,
+          "alpha": 0.1,
+          "inner_mae": 1.29596
+        },
+        {
+          "removed": "chg_cc_time_390_419_s",
+          "n_features": 5,
+          "alpha": 0.1,
+          "inner_mae": 1.14733
+        },
+        {
+          "removed": "dis_r0_ohm",
+          "n_features": 4,
+          "alpha": 0.1,
+          "inner_mae": 1.02871
+        }
+      ]
+    },
+    "lobo_folds": [
+      {
+        "held_out": "B0005",
+        "selected": [
+          "chg_ica_peak_height_ah_per_v",
+          "chg_ica_peak_voltage_v",
+          "dis_q_380_350_ah"
+        ],
+        "alpha": 0.1,
+        "inner_mae": 1.25903
+      },
+      {
+        "held_out": "B0006",
+        "selected": [
+          "chg_cc_time_390_419_s",
+          "chg_cv_time_s",
+          "chg_ica_peak_height_ah_per_v",
+          "dis_q_380_350_ah",
+          "dis_r0_ohm",
+          "dis_temp_rise_win_c"
+        ],
+        "alpha": 0.1,
+        "inner_mae": 0.656244
+      },
+      {
+        "held_out": "B0007",
+        "selected": [
+          "chg_cc_time_390_419_s",
+          "chg_cv_time_s",
+          "chg_ica_peak_height_ah_per_v",
+          "dis_q_380_350_ah",
+          "dis_r0_ohm"
+        ],
+        "alpha": 1.0,
+        "inner_mae": 1.56755
+      },
+      {
+        "held_out": "B0018",
+        "selected": [
+          "chg_ica_peak_height_ah_per_v",
+          "chg_ica_peak_voltage_v",
+          "dis_q_380_350_ah",
+          "dis_temp_rise_win_c"
+        ],
+        "alpha": 0.1,
+        "inner_mae": 1.01801
+      }
+    ],
+    "lobo_frequency": {
+      "chg_cc_time_390_419_s": 0.5,
+      "chg_cv_time_s": 0.5,
+      "chg_ica_peak_height_ah_per_v": 1.0,
+      "chg_ica_peak_voltage_v": 0.5,
+      "chg_temp_rise_cc_c": 0.0,
+      "dis_q_380_350_ah": 1.0,
+      "dis_r0_ohm": 0.5,
+      "dis_temp_rise_win_c": 0.5
+    },
+    "note": "'final' is the selection on all training cells (the shipped inputs); 'lobo_folds' are the selections of the per-cell models behind the metrics and the conformal residuals"
+  },
+  "training_protocol": {
+    "procedure": "ridge_nfs",
+    "experiment": "core_lobo",
+    "rows": "QC-valid cycles with a finite label and at least one measured input",
+    "n_evaluation_rows": 636,
+    "n_reference_cycles_excluded": 0,
+    "cycles_per_battery": {
+      "B0005": 168,
+      "B0006": 168,
+      "B0007": 168,
+      "B0018": 132
+    },
+    "label_range_per_battery": {
+      "B0005": [
+        70.1476,
+        101.152
+      ],
+      "B0006": [
+        57.3091,
+        101.093
+      ],
+      "B0007": [
+        74.4661,
+        100.552
+      ],
+      "B0018": [
+        72.899,
+        100.837
+      ]
+    },
+    "relative_reference": null
+  },
+  "provenance": {
+    "config": "configs/benchmark.yaml",
+    "benchmark_config_sha256": "019057651b4108da15f71ba86bd1169db8afefa373937ceb1604b5d919ccfa02",
+    "production_config_sha256": "8655c7614181681cc3b05ff2b8ac91178bbce11e1a6ab3f1eb1f1b9f7d57c88b",
+    "config_hashes": "benchmark_config_sha256 = config_sha256 of the benchmark run the metrics come from (its summary.json; covers the sections that determine benchmark results); production_config_sha256 = hash of the production section; both computed by battery_soh.evaluation.benchmark.config_hashes",
+    "benchmark_summary": "reports/benchmark/summary.json",
+    "benchmark_results": "reports/benchmark/results.csv",
+    "benchmark_results_sha256": "7001ae4d495311bf72099cd595fda54e87abf873fdd7adf6c110ea1923b5db52",
+    "features_csv": "nasa_features.csv",
+    "python": "3.11.9",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "sklearn": "1.8.0"
+  },
+  "model_card": "model_cards/combined-absolute-ridge.md"
+}

@@ -1,0 +1,486 @@
+{
+  "status": "ok",
+  "requires_raw_data": true,
+  "batteries": [
+    "B0005",
+    "B0006",
+    "B0007",
+    "B0018"
+  ],
+  "model": "ridge",
+  "label": "soh_pct",
+  "n_reference_cycles": 5,
+  "note": "Exploratory sensitivity analysis. The registry windows (discharge 3.80->3.50 V, charge 3.90->4.19 V) were fixed before this sweep and are not selected from it. Rows: QC-valid core cycles where the window is measurable; relative mode excludes each cell's reference cycles from fitting and scoring.",
+  "consistency_max_rel_diff": {
+    "dis_q_380_350_ah": 4.46375e-06,
+    "chg_cc_time_390_419_s": 3.63889e-06
+  },
+  "windows": [
+    {
+      "id": "dis_390_370",
+      "kind": "discharge",
+      "v_high": 3.9,
+      "v_low": 3.7,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 0.852201,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 0.440476,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.190956,
+      "absolute": {
+        "mae": 2.41638,
+        "rmse_pooled": 2.55359,
+        "r2": 0.920965,
+        "n": 542,
+        "per_battery_mae": {
+          "B0005": 1.34053,
+          "B0006": 4.38383,
+          "B0007": 1.16646,
+          "B0018": 2.7747
+        }
+      },
+      "relative": {
+        "mae": 1.04098,
+        "rmse_pooled": 1.24692,
+        "r2": 0.980106,
+        "n": 522,
+        "per_battery_mae": {
+          "B0005": 0.614006,
+          "B0006": 1.25443,
+          "B0007": 1.05509,
+          "B0018": 1.24038
+        }
+      }
+    },
+    {
+      "id": "dis_390_360",
+      "kind": "discharge",
+      "v_high": 3.9,
+      "v_low": 3.6,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 0.852201,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 0.440476,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.326421,
+      "absolute": {
+        "mae": 2.0464,
+        "rmse_pooled": 2.1877,
+        "r2": 0.941992,
+        "n": 542,
+        "per_battery_mae": {
+          "B0005": 1.25925,
+          "B0006": 4.11232,
+          "B0007": 0.835241,
+          "B0018": 1.9788
+        }
+      },
+      "relative": {
+        "mae": 0.985308,
+        "rmse_pooled": 1.1115,
+        "r2": 0.984193,
+        "n": 522,
+        "per_battery_mae": {
+          "B0005": 0.803802,
+          "B0006": 1.16204,
+          "B0007": 0.573815,
+          "B0018": 1.40157
+        }
+      }
+    },
+    {
+      "id": "dis_390_350",
+      "kind": "discharge",
+      "v_high": 3.9,
+      "v_low": 3.5,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 0.852201,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 0.440476,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.514773,
+      "absolute": {
+        "mae": 2.16108,
+        "rmse_pooled": 2.30186,
+        "r2": 0.935779,
+        "n": 542,
+        "per_battery_mae": {
+          "B0005": 1.2346,
+          "B0006": 3.55861,
+          "B0007": 0.880171,
+          "B0018": 2.97094
+        }
+      },
+      "relative": {
+        "mae": 0.967577,
+        "rmse_pooled": 1.07341,
+        "r2": 0.985257,
+        "n": 522,
+        "per_battery_mae": {
+          "B0005": 0.795691,
+          "B0006": 1.57854,
+          "B0007": 0.491715,
+          "B0018": 1.00436
+        }
+      }
+    },
+    {
+      "id": "dis_390_340",
+      "kind": "discharge",
+      "v_high": 3.9,
+      "v_low": 3.4,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 0.852201,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 0.440476,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.74075,
+      "absolute": {
+        "mae": 2.63667,
+        "rmse_pooled": 2.7143,
+        "r2": 0.910704,
+        "n": 542,
+        "per_battery_mae": {
+          "B0005": 1.62108,
+          "B0006": 4.72621,
+          "B0007": 1.36168,
+          "B0018": 2.83771
+        }
+      },
+      "relative": {
+        "mae": 0.974302,
+        "rmse_pooled": 1.19084,
+        "r2": 0.981855,
+        "n": 522,
+        "per_battery_mae": {
+          "B0005": 1.35174,
+          "B0006": 0.98894,
+          "B0007": 1.09442,
+          "B0018": 0.462106
+        }
+      }
+    },
+    {
+      "id": "dis_380_370",
+      "kind": "discharge",
+      "v_high": 3.8,
+      "v_low": 3.7,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 1.0,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 1.0,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.104006,
+      "absolute": {
+        "mae": 2.15435,
+        "rmse_pooled": 2.88734,
+        "r2": 0.930886,
+        "n": 636,
+        "per_battery_mae": {
+          "B0005": 1.79709,
+          "B0006": 4.19601,
+          "B0007": 1.33851,
+          "B0018": 1.28578
+        }
+      },
+      "relative": {
+        "mae": 1.60761,
+        "rmse_pooled": 1.99118,
+        "r2": 0.965621,
+        "n": 616,
+        "per_battery_mae": {
+          "B0005": 1.43474,
+          "B0006": 2.05511,
+          "B0007": 1.26353,
+          "B0018": 1.67707
+        }
+      }
+    },
+    {
+      "id": "dis_380_360",
+      "kind": "discharge",
+      "v_high": 3.8,
+      "v_low": 3.6,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 1.0,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 1.0,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.233131,
+      "absolute": {
+        "mae": 1.2827,
+        "rmse_pooled": 1.86232,
+        "r2": 0.971247,
+        "n": 636,
+        "per_battery_mae": {
+          "B0005": 1.29599,
+          "B0006": 2.29648,
+          "B0007": 0.643478,
+          "B0018": 0.894847
+        }
+      },
+      "relative": {
+        "mae": 1.33286,
+        "rmse_pooled": 1.66605,
+        "r2": 0.975931,
+        "n": 616,
+        "per_battery_mae": {
+          "B0005": 1.26789,
+          "B0006": 1.9465,
+          "B0007": 0.634042,
+          "B0018": 1.483
+        }
+      }
+    },
+    {
+      "id": "dis_380_350",
+      "kind": "discharge",
+      "v_high": 3.8,
+      "v_low": 3.5,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 1.0,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 1.0,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.411714,
+      "absolute": {
+        "mae": 1.60332,
+        "rmse_pooled": 1.99964,
+        "r2": 0.966851,
+        "n": 636,
+        "per_battery_mae": {
+          "B0005": 1.3539,
+          "B0006": 2.38057,
+          "B0007": 0.515329,
+          "B0018": 2.16347
+        }
+      },
+      "relative": {
+        "mae": 0.950147,
+        "rmse_pooled": 1.14311,
+        "r2": 0.98867,
+        "n": 616,
+        "per_battery_mae": {
+          "B0005": 0.967139,
+          "B0006": 1.27045,
+          "B0007": 0.690664,
+          "B0018": 0.872333
+        }
+      }
+    },
+    {
+      "id": "dis_380_340",
+      "kind": "discharge",
+      "v_high": 3.8,
+      "v_low": 3.4,
+      "features": [
+        "q_ah",
+        "temp_rise_c"
+      ],
+      "availability": 1.0,
+      "availability_per_battery": {
+        "B0005": 1.0,
+        "B0006": 1.0,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "capacity_fraction_mean": 0.627814,
+      "absolute": {
+        "mae": 1.64538,
+        "rmse_pooled": 2.1567,
+        "r2": 0.961439,
+        "n": 636,
+        "per_battery_mae": {
+          "B0005": 1.64895,
+          "B0006": 2.47559,
+          "B0007": 0.949915,
+          "B0018": 1.50705
+        }
+      },
+      "relative": {
+        "mae": 1.1861,
+        "rmse_pooled": 1.59076,
+        "r2": 0.978058,
+        "n": 616,
+        "per_battery_mae": {
+          "B0005": 0.837085,
+          "B0006": 1.96584,
+          "B0007": 1.35032,
+          "B0018": 0.591177
+        }
+      }
+    },
+    {
+      "id": "chg_380_419",
+      "kind": "charge",
+      "v_start": 3.8,
+      "v_end": 4.19,
+      "features": [
+        "time_s",
+        "temp_rise_c"
+      ],
+      "availability": 0.45283,
+      "availability_per_battery": {
+        "B0005": 0.333333,
+        "B0006": 0.309524,
+        "B0007": 0.410714,
+        "B0018": 0.840909
+      },
+      "capacity_fraction_mean": 0.647192,
+      "absolute": {
+        "mae": 4.09203,
+        "rmse_pooled": 4.88317,
+        "r2": 0.635106,
+        "n": 288,
+        "per_battery_mae": {
+          "B0005": 3.26357,
+          "B0006": 5.63385,
+          "B0007": 1.27213,
+          "B0018": 6.19856
+        }
+      },
+      "relative": {
+        "mae": 1.11592,
+        "rmse_pooled": 1.56551,
+        "r2": 0.961838,
+        "n": 268,
+        "per_battery_mae": {
+          "B0005": 0.500898,
+          "B0006": 1.01459,
+          "B0007": 1.10959,
+          "B0018": 1.83861
+        }
+      }
+    },
+    {
+      "id": "chg_390_419",
+      "kind": "charge",
+      "v_start": 3.9,
+      "v_end": 4.19,
+      "features": [
+        "time_s",
+        "temp_rise_c"
+      ],
+      "availability": 0.910377,
+      "availability_per_battery": {
+        "B0005": 0.97619,
+        "B0006": 0.720238,
+        "B0007": 0.982143,
+        "B0018": 0.977273
+      },
+      "capacity_fraction_mean": 0.544297,
+      "absolute": {
+        "mae": 3.46143,
+        "rmse_pooled": 3.80185,
+        "r2": 0.845184,
+        "n": 579,
+        "per_battery_mae": {
+          "B0005": 3.44087,
+          "B0006": 4.26571,
+          "B0007": 2.53151,
+          "B0018": 3.60765
+        }
+      },
+      "relative": {
+        "mae": 2.04467,
+        "rmse_pooled": 2.71067,
+        "r2": 0.916828,
+        "n": 559,
+        "per_battery_mae": {
+          "B0005": 0.903926,
+          "B0006": 3.34221,
+          "B0007": 2.69789,
+          "B0018": 1.23466
+        }
+      }
+    },
+    {
+      "id": "chg_400_419",
+      "kind": "charge",
+      "v_start": 4.0,
+      "v_end": 4.19,
+      "features": [
+        "time_s",
+        "temp_rise_c"
+      ],
+      "availability": 0.981132,
+      "availability_per_battery": {
+        "B0005": 0.982143,
+        "B0006": 0.982143,
+        "B0007": 0.982143,
+        "B0018": 0.977273
+      },
+      "capacity_fraction_mean": 0.358457,
+      "absolute": {
+        "mae": 6.69709,
+        "rmse_pooled": 8.13163,
+        "r2": 0.44643,
+        "n": 624,
+        "per_battery_mae": {
+          "B0005": 5.39485,
+          "B0006": 10.3172,
+          "B0007": 4.499,
+          "B0018": 6.57725
+        }
+      },
+      "relative": {
+        "mae": 4.46546,
+        "rmse_pooled": 6.03766,
+        "r2": 0.680211,
+        "n": 604,
+        "per_battery_mae": {
+          "B0005": 2.62361,
+          "B0006": 7.6545,
+          "B0007": 4.28955,
+          "B0018": 3.29418
+        }
+      }
+    }
+  ],
+  "lowest_mae_window": {
+    "absolute": "dis_380_360",
+    "relative": "dis_380_350"
+  }
+}

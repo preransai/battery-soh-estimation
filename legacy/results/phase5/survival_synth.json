@@ -1,0 +1,101 @@
+{
+  "setup": {
+    "eol_threshold_pct": 80.0,
+    "censor_fraction": 0.3,
+    "random_state": 42,
+    "n_batteries": 289,
+    "n_uncensored": 195,
+    "n_censored": 94
+  },
+  "baseline_weibull": {
+    "scale": 64.28713642158647,
+    "shape": 1.522689075630252,
+    "median_rul": 50.534610873095446
+  },
+  "pit": {
+    "n_uncensored": 195,
+    "bins": [
+      {
+        "edge_low": 0.0,
+        "edge_high": 0.1,
+        "count": 33,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.1,
+        "edge_high": 0.2,
+        "count": 22,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.2,
+        "edge_high": 0.30000000000000004,
+        "count": 14,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.30000000000000004,
+        "edge_high": 0.4,
+        "count": 20,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.4,
+        "edge_high": 0.5,
+        "count": 18,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.5,
+        "edge_high": 0.6000000000000001,
+        "count": 18,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.6000000000000001,
+        "edge_high": 0.7000000000000001,
+        "count": 14,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.7000000000000001,
+        "edge_high": 0.8,
+        "count": 22,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.8,
+        "edge_high": 0.9,
+        "count": 29,
+        "expected": 19.5
+      },
+      {
+        "edge_low": 0.9,
+        "edge_high": 1.0,
+        "count": 5,
+        "expected": 19.5
+      }
+    ],
+    "chi2": 28.743589743589745,
+    "chi2_p_value": 0.0007158130492925543
+  },
+  "d_calibration": {
+    "counts": [
+      35.416365107830785,
+      26.746209847066478,
+      19.791515800220015,
+      27.10836148594513,
+      26.372763056519386,
+      28.127328756045223,
+      25.34391047117789,
+      34.448233892268185,
+      43.51716698896103,
+      22.12814442102058
+    ],
+    "expected": 28.89999998270547,
+    "chi2": 15.33593417768541,
+    "chi2_p_value": 0.08211217915903289
+  },
+  "c_index_baseline": 0.46152904699738906,
+  "note": "This baseline uses a GLOBAL Weibull MLE (no features) as a sanity-check harness. The shipped Phase-4 WeibullHead should be re-evaluated through the same protocol to get the feature-aware numbers."
+}

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "charge-absolute-ridge.json": "de9315490067b6dc1924515b6da60d8ee05d748de89c0353a71744171789c840",
+    "combined-absolute-ridge.json": "b768c306aa53c40a0593335ed88df7b8a7f8aba230e60ac02b2697fc51cfda59",
+    "combined-relative-ridge.json": "8c7519b9e74d012cf7199b05ff664af8de27789ffb3d61f2f778dfe536a8dff4",
+    "discharge-absolute-ridge.json": "56a19ff034c0eeeb02c25c00354ff08b07021b9778740c02cbd8e9d580e0214e",
+    "model_cards/charge-absolute-ridge.md": "9733102f22c67d539ae37ce41eacf1a9d55be9af1970f70814b71b8280cbaa81",
+    "model_cards/combined-absolute-ridge.md": "b2baf848e0c5c62c4ea53011c70dfe84dfec4c8b2b13669bc6fb2037862cf259",
+    "model_cards/combined-relative-ridge.md": "f1f4477674b4525d781d9b5be9341baf1dba1c82b5c6bef9f162faa12716c51e",
+    "model_cards/discharge-absolute-ridge.md": "563a1f8d752d25dd60e1f8cf41b1e9f7305fe4dfea64527a2e51382fb51784cf"
+  },
+  "created_utc": "2026-10-12T07:39:55+00:00"
+}

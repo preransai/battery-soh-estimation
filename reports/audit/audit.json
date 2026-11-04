@@ -1,0 +1,325 @@
+{
+  "schema_version": "1.0",
+  "package_version": "2.0.0",
+  "generated_utc": "2026-10-14T11:53:45+00:00",
+  "features_csv": "nasa_features.csv",
+  "features_sha256": "f6c4fb709c4810f76a71eaf3ee2b99f963e0fcc94d354dbe636ae8682333d997",
+  "label": "soh_pct",
+  "rows": [
+    {
+      "id": "v1_contaminated_split",
+      "label": "v1 evaluation protocol: v1 inputs incl. capacity, 'test' = all of B0006+B0007",
+      "category": "v1_reported",
+      "mae": 1.20811,
+      "rmse": 1.79432,
+      "r2": 0.977394,
+      "leaky": true,
+      "protocol": "train first 85% of B0005-7; test all of B0006+B0007",
+      "feature_set": "legacy_v1",
+      "model": "ridge",
+      "n_train": 426,
+      "n_test": 336,
+      "overlapping_rows": 284,
+      "note": "284 of 336 test rows were training rows"
+    },
+    {
+      "id": "v1_within_battery_holdout",
+      "label": "Same model, honest within-battery holdout (last 15% of B0005-7)",
+      "category": "honest",
+      "mae": 2.48004,
+      "rmse": 2.95944,
+      "r2": 0.801314,
+      "leaky": true,
+      "protocol": "train first 85% of B0005-7; test last 15% of each",
+      "feature_set": "legacy_v1",
+      "model": "ridge",
+      "n_train": 426,
+      "n_test": 78,
+      "overlapping_rows": 0,
+      "note": "disjoint rows, but the batteries were seen in training"
+    },
+    {
+      "id": "v1_inputs_lobo",
+      "label": "v1 inputs incl. capacity, leave-one-battery-out",
+      "category": "honest",
+      "mae": 3.21545,
+      "rmse": 3.56469,
+      "r2": 0.87768,
+      "leaky": true,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "legacy_v1",
+      "model": "ridge",
+      "n_train": null,
+      "n_test": 636,
+      "overlapping_rows": 0,
+      "note": ""
+    },
+    {
+      "id": "v1_inputs_without_capacity_lobo",
+      "label": "v1 inputs without capacity (full-discharge proxies), leave-one-battery-out",
+      "category": "honest",
+      "mae": 3.21707,
+      "rmse": 3.58415,
+      "r2": 0.882606,
+      "leaky": true,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "legacy_v1_no_capacity",
+      "model": "ridge",
+      "n_train": null,
+      "n_test": 636,
+      "overlapping_rows": 0,
+      "note": "the proxies still need a complete discharge"
+    },
+    {
+      "id": "capacity_only_lobo",
+      "label": "Capacity alone (label numerator), leave-one-battery-out",
+      "category": "honest",
+      "mae": 3.4726,
+      "rmse": 3.49037,
+      "r2": 0.857082,
+      "leaky": true,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "capacity_oracle",
+      "model": "ridge",
+      "n_train": null,
+      "n_test": 636,
+      "overlapping_rows": 0,
+      "note": "not perfect only because each held-out cell's C0 is unknown"
+    },
+    {
+      "id": "v2_headline",
+      "label": "v2 pre-specified headline: partial-window HIs, LOBO",
+      "category": "v2",
+      "mae": 2.52618,
+      "rmse": 2.83622,
+      "r2": 0.880582,
+      "leaky": false,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "combined",
+      "model": "ridge_nfs",
+      "n_train": null,
+      "n_test": 636,
+      "overlapping_rows": 0,
+      "note": "combined/absolute/ridge_nfs; mean over held-out batteries; R2 pooled"
+    },
+    {
+      "id": "v2_same_set_plain_ridge",
+      "label": "v2 same feature set, plain Ridge, LOBO",
+      "category": "v2",
+      "mae": 2.5958,
+      "rmse": 2.80462,
+      "r2": 0.898212,
+      "leaky": false,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "combined",
+      "model": "ridge",
+      "n_train": null,
+      "n_test": 636,
+      "overlapping_rows": 0,
+      "note": "combined/absolute/ridge; mean over held-out batteries; R2 pooled"
+    },
+    {
+      "id": "v2_discharge_ridge",
+      "label": "v2 discharge-window HIs only, plain Ridge, LOBO",
+      "category": "v2",
+      "mae": 1.6521,
+      "rmse": 1.92709,
+      "r2": 0.964793,
+      "leaky": false,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "discharge",
+      "model": "ridge",
+      "n_train": null,
+      "n_test": 636,
+      "overlapping_rows": 0,
+      "note": "discharge/absolute/ridge; mean over held-out batteries; R2 pooled"
+    },
+    {
+      "id": "v2_relative_mode",
+      "label": "v2 relative mode, plain Ridge (indicators / commissioning reference), LOBO",
+      "category": "v2",
+      "mae": 1.07959,
+      "rmse": 1.28869,
+      "r2": 0.981752,
+      "leaky": false,
+      "protocol": "leave-one-battery-out (4 core cells)",
+      "feature_set": "combined",
+      "model": "ridge",
+      "n_train": null,
+      "n_test": 612,
+      "overlapping_rows": 0,
+      "note": "combined/relative/ridge; mean over held-out batteries; R2 pooled; reference cycles not scored"
+    }
+  ],
+  "soh_vs_capacity_within_battery_r2": 1.0,
+  "capacity_reconstruction_r2": 0.99498,
+  "contaminated_test_overlap": {
+    "overlapping_rows": 284,
+    "test_rows": 336
+  },
+  "v2_headline_spec": "core_lobo/combined/absolute/ridge_nfs",
+  "details": {
+    "soh_vs_capacity_within_battery": {
+      "per_battery": {
+        "B0005": 1.0,
+        "B0006": 1.0,
+        "B0007": 1.0,
+        "B0018": 1.0
+      },
+      "min": 1.0,
+      "max_abs_error_soh_minus_100_capacity_over_c0": 0.000694716,
+      "note": "Computed on the committed CSV (6 significant digits), so R^2 is 1 up to rounding and the identity error is at the rounding level."
+    },
+    "capacity_reconstruction": {
+      "feature_set": "legacy_v1_no_capacity",
+      "features": [
+        "leg_record_time_s",
+        "leg_current_mean_a",
+        "leg_voltage_mean_v",
+        "leg_temp_max_c",
+        "ctx_cycle_index"
+      ],
+      "target": "capacity_ah",
+      "protocol": "leave-one-battery-out, near-OLS ridge (evaluation.leakage)",
+      "r2": 0.99498,
+      "r2_linear": 0.992816,
+      "r2_log_linear": 0.99498
+    },
+    "v1_split": {
+      "train_batteries": [
+        "B0005",
+        "B0006",
+        "B0007"
+      ],
+      "holdout_fraction": 0.15,
+      "train_rows": 426,
+      "contaminated_test_batteries": [
+        "B0006",
+        "B0007"
+      ],
+      "contaminated_test_rows": 336,
+      "overlapping_rows": 284,
+      "honest_holdout_rows": 78,
+      "mae_on_overlapping_rows": 0.826021,
+      "mae_on_unseen_rows": 3.2949
+    },
+    "lobo_per_battery_mae": {
+      "legacy_v1": {
+        "B0005": 1.56158,
+        "B0006": 5.71424,
+        "B0007": 1.84657,
+        "B0018": 3.73941
+      },
+      "legacy_v1_no_capacity": {
+        "B0005": 1.49943,
+        "B0006": 5.19424,
+        "B0007": 2.10582,
+        "B0018": 4.06878
+      },
+      "capacity_oracle": {
+        "B0005": 3.48357,
+        "B0006": 6.70328,
+        "B0007": 0.735654,
+        "B0018": 2.96791
+      }
+    },
+    "leakage_report_legacy_v1": [
+      {
+        "feature": "leg_capacity_ah",
+        "registry_risk": "label",
+        "max_within_battery_abs_r": 1.0,
+        "label_lobo_r2": 0.857164,
+        "capacity_reconstruction_r2": 1.0,
+        "flagged": true,
+        "reasons": "registry: label-side feature; within-battery |r| with soh_pct = 1.00000 >= 0.9995; rebuilds capacity_ah alone (LOBO R2 = 1.00000 >= 0.995)"
+      },
+      {
+        "feature": "leg_record_time_s",
+        "registry_risk": "proxy",
+        "max_within_battery_abs_r": 0.993067,
+        "label_lobo_r2": 0.651426,
+        "capacity_reconstruction_r2": 0.852458,
+        "flagged": true,
+        "reasons": "registry: label proxy (full-discharge statistic)"
+      },
+      {
+        "feature": "leg_current_mean_a",
+        "registry_risk": "proxy",
+        "max_within_battery_abs_r": 0.989139,
+        "label_lobo_r2": 0.685231,
+        "capacity_reconstruction_r2": 0.715682,
+        "flagged": true,
+        "reasons": "registry: label proxy (full-discharge statistic)"
+      },
+      {
+        "feature": "leg_voltage_mean_v",
+        "registry_risk": "proxy",
+        "max_within_battery_abs_r": 0.985598,
+        "label_lobo_r2": 0.867428,
+        "capacity_reconstruction_r2": 0.683277,
+        "flagged": true,
+        "reasons": "registry: label proxy (full-discharge statistic)"
+      },
+      {
+        "feature": "leg_temp_max_c",
+        "registry_risk": "proxy",
+        "max_within_battery_abs_r": 0.93527,
+        "label_lobo_r2": -0.275594,
+        "capacity_reconstruction_r2": -0.412467,
+        "flagged": true,
+        "reasons": "registry: label proxy (full-discharge statistic)"
+      },
+      {
+        "feature": "ctx_cycle_index",
+        "registry_risk": "none",
+        "max_within_battery_abs_r": 0.988085,
+        "label_lobo_r2": 0.652802,
+        "capacity_reconstruction_r2": 0.778459,
+        "flagged": false,
+        "reasons": ""
+      },
+      {
+        "feature": "(feature set)",
+        "registry_risk": "label",
+        "max_within_battery_abs_r": 1.0,
+        "label_lobo_r2": 0.87061,
+        "capacity_reconstruction_r2": 1.0,
+        "flagged": true,
+        "reasons": "feature set rebuilds capacity_ah (LOBO R2 = 1.00000 >= 0.995)"
+      }
+    ],
+    "guards": {
+      "assert_disjoint_on_v1_split": {
+        "raised": true,
+        "error": "LeakageError",
+        "message": "284 evaluation row(s) also appear in the training data (e.g. ('B0006', 0), ('B0006', 1), ('B0006', 2), ('B0006', 3), ('B0006', 4))"
+      },
+      "check_no_leakage_legacy_v1": {
+        "raised": true,
+        "error": "LeakageError",
+        "message": "target leakage detected for label 'soh_pct':\n  - leg_capacity_ah: registry: label-side feature; within-battery |r| with soh_pct = 1.00000 >= 0.9995; rebuilds capacity_ah alone (LOBO R2 = 1.00000 >= 0.995)\n  - leg_record_time_s: registry: label proxy (full-discharge statistic)\n  - leg_current_mean_a: registry: label proxy (full-discharge statistic)\n  - leg_voltage_mean_v: registry: label proxy (full-discharge statistic)\n  - leg_temp_max_c: registry: label proxy (full-discharge statistic)\n  - (feature set): feature set rebuilds capacity_ah (LOBO R2 = 1.00000 >= 0.995)"
+      },
+      "check_no_leakage_legacy_v1_no_capacity": {
+        "raised": true,
+        "error": "LeakageError",
+        "message": "target leakage detected for label 'soh_pct':\n  - leg_record_time_s: registry: label proxy (full-discharge statistic)\n  - leg_current_mean_a: registry: label proxy (full-discharge statistic)\n  - leg_voltage_mean_v: registry: label proxy (full-discharge statistic)\n  - leg_temp_max_c: registry: label proxy (full-discharge statistic)"
+      },
+      "get_feature_set_legacy_v1_without_opt_in": {
+        "raised": true,
+        "error": "ValueError",
+        "message": "Feature set 'legacy_v1' contains label-side/proxy features ['leg_capacity_ah', 'leg_record_time_s', 'leg_current_mean_a', 'leg_voltage_mean_v', 'leg_temp_max_c']; pass allow_leaky=True only for audits or labelled sanity baselines."
+      }
+    },
+    "v1_documented_claim": {
+      "r2": 0.96,
+      "source": "legacy/README.md ('reported R2 ~ 0.96')",
+      "note": "withdrawn; measured on a test file whose rows were mostly training rows"
+    }
+  },
+  "notes": [
+    "Rows use QC-valid cycles of the four core cells (B0005, B0006, B0007, B0018).",
+    "v1 rows use the legacy_v1 inputs (capacity, record time, whole-record means, cycle count) with the same Ridge as v2 (alpha=1 on standardised inputs).",
+    "mae/rmse for leave-one-battery-out rows: mean over held-out batteries; r2 pooled.",
+    "leaky = the inputs contain the label numerator or full-discharge proxies of it."
+  ]
+}

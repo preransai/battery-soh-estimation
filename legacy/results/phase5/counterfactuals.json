@@ -1,0 +1,92 @@
+{
+  "feature_set": "simple_6",
+  "target_soh": 85.0,
+  "n_examples": 5,
+  "examples": [
+    {
+      "predicted_original": 62.896,
+      "predicted_counterfactual": 84.961,
+      "target": 85.0,
+      "n_features_changed": 2,
+      "l1_normalised": 2.8316,
+      "changes": {
+        "capacity": {
+          "from": -3.6883,
+          "to": -0.1938,
+          "delta": 3.4945
+        },
+        "cycle_number": {
+          "from": 3.1089,
+          "to": 2.8153,
+          "delta": -0.2936
+        }
+      },
+      "cycle_index": 163,
+      "true_soh": 57.19
+    },
+    {
+      "predicted_original": 63.436,
+      "predicted_counterfactual": 85.005,
+      "target": 85.0,
+      "n_features_changed": 1,
+      "l1_normalised": 2.5691,
+      "changes": {
+        "capacity": {
+          "from": -3.6528,
+          "to": -0.1938,
+          "delta": 3.459
+        }
+      },
+      "cycle_index": 165,
+      "true_soh": 57.437
+    },
+    {
+      "predicted_original": 63.668,
+      "predicted_counterfactual": 84.988,
+      "target": 85.0,
+      "n_features_changed": 1,
+      "l1_normalised": 2.5394,
+      "changes": {
+        "capacity": {
+          "from": -3.6128,
+          "to": -0.1938,
+          "delta": 3.419
+        }
+      },
+      "cycle_index": 164,
+      "true_soh": 57.714
+    },
+    {
+      "predicted_original": 64.248,
+      "predicted_counterfactual": 85.114,
+      "target": 85.0,
+      "n_features_changed": 1,
+      "l1_normalised": 2.4853,
+      "changes": {
+        "capacity": {
+          "from": -3.5399,
+          "to": -0.1938,
+          "delta": 3.3461
+        }
+      },
+      "cycle_index": 162,
+      "true_soh": 58.22
+    },
+    {
+      "predicted_original": 63.328,
+      "predicted_counterfactual": 85.233,
+      "target": 85.0,
+      "n_features_changed": 1,
+      "l1_normalised": 2.6091,
+      "changes": {
+        "capacity": {
+          "from": -3.5372,
+          "to": -0.0245,
+          "delta": 3.5128
+        }
+      },
+      "cycle_index": 166,
+      "true_soh": 58.238
+    }
+  ]
+}
