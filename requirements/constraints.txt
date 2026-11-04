@@ -104,7 +104,7 @@ pandocfilters==1.5.1
 parso==0.8.6
 pathspec==1.1.1
 pillow==12.2.0
-platformdirs==4.9.6
+platformdirs==4.14.2
 pluggy==1.6.0
 pre-commit==4.6.2
 prometheus-client==0.25.0
